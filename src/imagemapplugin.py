@@ -30,7 +30,7 @@ from imagemapplugingui import ImageMapPluginGui
 
 # initialize Qt resources from file
 import imagemapplugin_rc
-
+from shutil import copyfile
 
 class ImageMapPlugin:
 
@@ -40,7 +40,13 @@ class ImageMapPlugin:
     # save reference to the QGIS interface
     self.iface = iface
     self.filesPath = "/tmp/foo"
-
+    self.attrFields = []
+    self.layerName = ""
+    self.iconFilePath = "/foo/bar.svg"
+    self.labels = []
+    self.infoBoxes = []
+    self.index = 0
+    self.featureCount = 0
 
   def initGui(self):
     # create action that will start plugin configuration
@@ -72,68 +78,87 @@ class ImageMapPlugin:
     # check if current active layer is a polygon layer:
     layer =  self.iface.activeLayer()
     if layer == None:
-        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No active layer found\n" "Please make one (multi)polygon or point layer active\n" "by choosing a layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No active layer found\n" "Please select a (multi) polygon or point layer first, \n" "by choosing a layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
         return
     # don't know if this is possible / needed
     if not layer.isValid():
-        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No VALID layer found\n" "Please make one (multi)polygon or point layer active\n" "by choosing a layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No VALID layer found\n" "Please select a valid (multi) polygon or point layer first, \n" "by choosing a layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
         return
     if (layer.type()>0): # 0 = vector, 1 = raster
-        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("Wrong layer type, only vector layers can be used..\n" "Please make one vector layer active\n" "by choosing a vector layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("Wrong layer type, only vector layers may be used..\n" "Please select a vector layer first, \n" "by choosing a vector layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
         return
     self.provider = layer.dataProvider()
     if not(self.provider.geometryType() == QGis.WKBPolygon or self.provider.geometryType() == QGis.WKBMultiPolygon or self.provider.geometryType() == QGis.WKBPoint):
-        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("Wrong geometrytype, only (multi)polygons and points can be used.\n" "Please make one (multi)polygon or point layer active\n" "by choosing a layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("Wrong geometrytype, only (multi) polygons and points can be used.\n" "Please select a (multi )polygon or point layer first, \n" "by choosing a layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
         return
 
     # we need the fields of the active layer to show in the attribute combobox in the gui:
-    attrFields = []
-
+    self.attrFields = []
     fields = self.provider.fields()
     if hasattr(fields, 'iteritems'):
-      for (i, field) in fields.iteritems():
-        attrFields.append(field.name().trimmed())
+        for (i, field) in fields.iteritems():
+            self.attrFields.append(field.name().trimmed())
     else:
         for field in self.provider.fields():
-          attrFields.append(field.name().strip())
-
+            self.attrFields.append(field.name().strip())
+    for i in range(layer.fields().count()):
+        if layer.fields().fieldOrigin(i) == QgsFields.OriginExpression:
+            self.attrFields.append(layer.fields()[i].name())
     # construct gui (using these fields)
     flags = Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMaximizeButtonHint  # QgisGui.ModalDialogFlags
     # construct gui: if available reuse this one
     if hasattr(self, 'imageMapPlugin') == False:
         self.imageMapPluginGui = ImageMapPluginGui(self.iface.mainWindow(), flags)
-    self.imageMapPluginGui.setAttributeFields(attrFields)
+    self.imageMapPluginGui.setAttributeFields(self.attrFields)
     self.imageMapPluginGui.setMapCanvasSize(self.iface.mapCanvas().width(), self.iface.mapCanvas().height())
-    self.layerAttr = attrFields
+    self.layerAttr = self.attrFields
     self.selectedFeaturesOnly = False # default all features in current Extent
     # catch SIGNAL's
     QObject.connect(self.imageMapPluginGui, SIGNAL("getFilesPath(QString)"), self.setFilesPath)
+    QObject.connect(self.imageMapPluginGui, SIGNAL("getLayerName(QString)"), self.setLayerName)
+    QObject.connect(self.imageMapPluginGui, SIGNAL("getIconFilePath(QString)"), self.setIconFilePath)
     QObject.connect(self.imageMapPluginGui, SIGNAL("onHrefAttributeSet(QString)"), self.onHrefAttributeFieldSet)
     QObject.connect(self.imageMapPluginGui, SIGNAL("onClickAttributeSet(QString)"), self.onClickAttributeFieldSet)
     QObject.connect(self.imageMapPluginGui, SIGNAL("onMouseOverAttributeSet(QString)"), self.onMouseOverAttributeFieldSet)
     QObject.connect(self.imageMapPluginGui, SIGNAL("onMouseOutAttributeSet(QString)"), self.onMouseOutAttributeFieldSet)
     QObject.connect(self.imageMapPluginGui, SIGNAL("getCbkBoxSelectedOnly(bool)"), self.setSelectedOnly)
+    QObject.connect(self.imageMapPluginGui, SIGNAL("getSelectedFeatureCount(QString)"), self.setFeatureCount)
     QObject.connect(self.imageMapPluginGui, SIGNAL("go(QString)"), self.go)
     QObject.connect(self.imageMapPluginGui, SIGNAL("setMapCanvasSize(int, int)"), self.setMapCanvasSize)
-    # remember old path's in this session:
+    # remember old paths in this session:
     self.imageMapPluginGui.setFilesPath(self.filesPath)
+    self.imageMapPluginGui.setIconFilePath(self.iconFilePath)
+    self.imageMapPluginGui.setLayerName(self.iface.activeLayer().name())
+    self.imageMapPluginGui.setFeatureCount(str(self.iface.activeLayer().selectedFeatureCount()))
     self.imageMapPluginGui.show()
 
-
   def writeHtml(self):
+    iconName = os.path.basename(os.path.normpath(self.iconFilePath))
+    src = self.iconFilePath
+    dst = os.path.dirname(self.filesPath) + "/" + iconName
+    if src <> dst:
+        copyfile(src, dst)
     # create a holder for retrieving features from the provider
     feature = QgsFeature();
     temp = unicode(self.filesPath+".png")
     imgfilename = os.path.basename(temp)
-    html = [u'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><html>']
-    # some rudimentary javascript to show off the mouse click and mouse over
-    html.append(u'<head><title>QGIS</title><script type="text/javascript">\n')
-    html.append(u'function mapOnMouseOver(str){document.getElementById("mousemovemessage").innerHTML=str; }\n')
-    html.append(u'function mapOnMouseOut(str){document.getElementById("mousemovemessage").innerHTML="out of "+str; }\n')
-    html.append(u'function mapOnClick(str){alert(str);}\n')
-    html.append(u'</script> </head> <body>')
+    html = [u'<!DOCTYPE HTML><html>']
+    isLabelChecked = self.imageMapPluginGui.isOnClickChecked()
+    isInfoChecked = self.imageMapPluginGui.isOnMouseOverChecked()
+    html.append(u'<head><title>QGIS</title></head><body>')
+    if isInfoChecked:
+        html.append(u'<div id="info-box" class="hidden"></div>')
+    if isLabelChecked:
+        html.append(u'<div class="title-box"></div>')
+    html.append(u'<style type="text/css">')
+    html.append(u'#map-container { width: auto; height: auto; z-index: 0; position: relative; } .icons { z-index: 10; position: absolute; } body { font-family: Arial, Helvetica, sans-serif; } ')
+    if isInfoChecked:
+        html.append(u'#info-box { position: absolute; visibility: visible; z-index: 50; background-color: #FFFFFF; width: 250px; height: 114px; padding: 10px; margin: 0; border-radius: 10px; box-shadow: 4px 4px 2px 0 rgba(0, 0, 0, 0.75); font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 130%; color: #5F5F5F; } #info-box:after { content: ""; position: absolute; border-style: solid; border-width: 15px 15px 0; border-color: #FFFFFF transparent; display: block; width: 0; z-index: 1; bottom: -15px; left: 129px; } .hidden { display: none; } .visible { display: block; } ')
+    if isLabelChecked:
+        html.append(u'.title-box { position: absolute; z-index: 15; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: black; text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white; white-space: nowrap; }')
+    html.append(u'</style>')
     html.append(u'<div id="mousemovemessage"></div><br>')
-    html.append(u'<img src="' + imgfilename + '" border="0" ismap="ismap" usemap="#mapmap" alt="html imagemap created with QGIS" >\n')
+    html.append(u'<div id="container"></div><img id="map-container" src="'+ imgfilename +'" border="0" ismap="ismap" usemap="#mapmap" alt="html imagemap created with QGIS" >\n')
     html.append(u'<map name="mapmap">\n')
 
     mapCanvasExtent = self.iface.mapCanvas().extent()
@@ -198,7 +223,53 @@ class ImageMapPlugin:
             html.extend( self.handleGeom(feature, selectedFeaturesIds, doCrsTransform, bufferDistance) )
             progressValue = progressValue+1
             self.imageMapPluginGui.setProgressBarValue(progressValue)
-    html.append(u'</map></body></html>')
+    html.append(u'</map>')
+    html.append(u'<script type="text/javascript">\n')
+    html.append(u'(function() { "use strict"; var areas = document.querySelectorAll("area"); for (var i = 0; i < areas.length; i++) { var img = new Image(); var centroid = getAreaCenter(areas[i].getAttribute("coords")); img.id = i.toString(); img.src = "'+ iconName +'"; img.className = "hidden"; document.getElementById("container").appendChild(img); img.style.left = centroid[0] + "px"; img.style.top = centroid[1] + "px"; img.onload = function() { this.style.left = parseInt(this.style.left, 10) - img.width / 2 + "px"; this.className = "icons"; ')
+    if isLabelChecked:
+        html.append(u'var boundingBox = this.getBoundingClientRect(); var centerX = boundingBox.width / 2 + boundingBox.left; var centerY = boundingBox.height + boundingBox.top; displayElementText(centerX, centerY, Number(this.id));')
+    html.append(u' } } ')
+    if isInfoChecked:
+        html.append(u'document.addEventListener("click", function(e) { if (e.target.className === "icons") { var boundingBox = e.target.getBoundingClientRect(); var centerX = boundingBox.width / 2 + boundingBox.left; var centerY = boundingBox.top + boundingBox.height / 2; document.getElementById("info-box").className = "visible"; displayBox(centerX, centerY, Number(e.target.id)); } else { hideBox(); } }); ')
+        html.append(u'function displayBox(centerX, centerY, id) { var infoBox = document.getElementById("info-box"); var infoWidthToCenter = infoBox.offsetWidth / 2; var infoHeight = infoBox.offsetHeight; infoBox.innerHTML = infoBoxes[id]; infoBox.style.left = (centerX - infoWidthToCenter - 10) + "px"; infoBox.style.top = (centerY - infoHeight - 15) + "px"; } ')
+        html.append(u'function hideBox() { document.getElementById("info-box").className = "hidden"; } ')
+    if isLabelChecked:
+        html.append(u'function displayElementText(centerX, centerY, id) { var titleBoxContainer = document.getElementsByClassName("title-box")[0]; var titleBox = document.createElement("title-box"); titleBox.className = "title-box"; titleBox.innerHTML = labels[id]; titleBoxContainer.appendChild(titleBox); var titleWidthToCenter = titleBox.offsetWidth / 2; var titleHeightToCenter = titleBox.offsetHeight; titleBox.style.left = (centerX - titleWidthToCenter - 10) + "px"; titleBox.style.top = (centerY - titleHeightToCenter + 5) + "px"; } ')
+    html.append(u'function getAreaCenter(coords) { var coordsArray = coords.split(","), center = []; var coord, maxX, maxY, minX = maxX = parseInt(coordsArray[0], 10), minY = maxY = parseInt(coordsArray[1], 10); for (var i = 0; i < coordsArray.length; i++) { coord = parseInt(coordsArray[i], 10); if (i % 2 === 0) { if (coord < minX) { minX = coord; } else if (coord > maxX) { maxX = coord; } } else { if (coord < minY) { minY = coord; } else if (coord > maxY) { maxY = coord; } } } center = [parseInt((minX + maxX) / 2, 10), parseInt((minY + maxY) / 2, 10)]; return center; } ')
+    if len(self.labels) > 0:
+        labelCounter = 0
+        for l in self.labels:
+            if len(self.labels) == 1:
+                html.append(u'var labels = ["'+ l +'"]; ')
+                break
+            else:
+                if labelCounter == 0:
+                    html.append(u'var labels = ["'+ l +'", ')
+                elif labelCounter <> len(self.labels) - 1:
+                    html.append(u'"'+ l +'", ')
+                else:
+                    html.append(u'"'+ l +'"]; ')
+                    break
+                labelCounter = labelCounter + 1
+    if len(self.infoBoxes) > 0:
+        infoBoxCounter = 0
+        for i in self.infoBoxes:
+            if len(self.infoBoxes) == 1:
+                html.append(u'var infoBoxes = ["'+ i +'"]; ')
+                break
+            else:
+                if infoBoxCounter == 0:
+                    html.append(u'var infoBoxes = ["'+ i +'", ')
+                elif infoBoxCounter <> len(self.infoBoxes) - 1:
+                    html.append(u'"'+ i +'", ')
+                else:
+                    html.append(u'"'+ i +'"]; ')
+                    break
+                infoBoxCounter = infoBoxCounter + 1
+    del self.labels[:]
+    del self.infoBoxes[:]
+    html.append(u'})();\n')
+    html.append(u'</script></body></html>')
     return html
 
   def handleGeom(self, feature, selectedFeaturesIds, doCrsTransform, bufferDistance):
@@ -255,6 +326,12 @@ class ImageMapPlugin:
   def setFilesPath(self, filesPathQString):
     self.filesPath = filesPathQString
 
+  def setIconFilePath(self, iconPathQString):
+    self.iconFilePath = iconPathQString
+    
+  def setLayerName(self, layerNameQString):
+    self.layerName = layerNameQString
+    
   def onHrefAttributeFieldSet(self, attributeFieldQstring):
     self.hrefAttributeField = attributeFieldQstring
     self.hrefAttributeIndex = self.provider.fieldNameIndex(attributeFieldQstring)
@@ -274,7 +351,10 @@ class ImageMapPlugin:
   def setSelectedOnly(self, selectedOnlyBool):
     #print "selectedFeaturesOnly: %s" % selectedOnlyBool
     self.selectedFeaturesOnly = selectedOnlyBool
-
+  
+  def setFeatureCount(self, featureCountQstring):
+    self.featureCount = featureCountQstring
+    
   def setMapCanvasSize(self, newWidth, newHeight):
     mapCanvas=self.iface.mapCanvas()
     parent=mapCanvas.parentWidget()
@@ -297,7 +377,7 @@ class ImageMapPlugin:
     diffHeight=mapCanvas.size().height()-newHeight
     mapCanvas.resize(newWidth, newHeight)
     parent.resize(parent.size().width()-diffWidth, parent.size().height()-diffHeight)
-    # HACK: there are cases where after maximising and here demaximizing the size of the parent is not
+    # HACK: there are cases where after maximizing and here demaximizing the size of the parent is not
     # in sync with the actual size, giving a small error in the size setting
     # we do the resizing again, this fixes this small error then ....
     if newWidth <> mapCanvas.size().width() or newHeight <> mapCanvas.size().height():
@@ -313,7 +393,7 @@ class ImageMapPlugin:
     #if not os.access(htmlfilename, os._OK):
     #  QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("Unable to write file with this name.\n" "Please choose a valid filename and a writable directory."))
     #  return
-    # check if file(s) excist:
+    # check if file(s) exist:
     if os.path.isfile(htmlfilename) or os.path.isfile(imgfilename):
         if QMessageBox.question(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("There is already a filename with this name.\n" "Continue?"), QMessageBox.Cancel, QMessageBox.Ok) <> QMessageBox.Ok:
             return
@@ -326,6 +406,7 @@ class ImageMapPlugin:
         for line in html:
           file.write(line.encode('utf-8'))
         file.close()
+        self.index = 0
         self.iface.mapCanvas().saveAsImage(imgfilename)
         msg = "Files successfully saved to:\n" + self.filesPath
         QMessageBox.information(self.iface.mainWindow(), self.MSG_BOX_TITLE, ( msg ), QMessageBox.Ok)
@@ -343,30 +424,32 @@ class ImageMapPlugin:
     pixY = (y - maxy)/mupp
     return [int(pixX), int(-pixY)]
 
-  # for given ring in feature, IF al least on point on ring is in mapCanvasExtent
+  # for given ring in feature, IF at least on point on ring is in mapCanvasExtent
   # generate a string like:
-  # <area shape=polygon href='xxx' onClick="mapOnClick('yyy')" onMouseOver="mapOnMouseOver('zzz')  coords=519,-52,519,..,-52,519,-52>
+  # <area data-info-id=x shape=polygon coords=519,-52,519,..,-52,519,-52 alt=...>
   def ring2area(self, feature, ring, extent, extentAsPoly):
     param = u''
-    htm = u'<area shape="poly" '
+    htm = u'<area data-info-id="'+ str(self.index) +'" shape="poly" '
+    self.index = self.index + 1
     if hasattr(feature, 'attributeMap'):
         attrs = feature.attributeMap()
     else:
         # QGIS > 2.0
         attrs = feature
     # escape ' and " because they will collapse as javascript parameter
-    if self.imageMapPluginGui.isHrefChecked():
-        htm = htm + 'href="' + unicode(attrs[self.hrefAttributeIndex]) + '" '
     if self.imageMapPluginGui.isOnClickChecked():
+        # Negative index in this context means the field in question is a virtual one
+        if self.onClickAttributeIndex < 0:
+            # This is a workaround, since the data provider cannot find the virtual fields
+            self.onClickAttributeIndex = self.attrFields.index(str(self.onClickAttributeField))
         param = unicode(attrs[self.onClickAttributeIndex])
-        htm = htm + 'onClick="mapOnClick(\'' + self.jsEscapeString(param) + '\')" '
+        self.labels.append(self.jsEscapeString(param))
     if self.imageMapPluginGui.isOnMouseOverChecked():
+        if self.onMouseOverAttributeIndex < 0:
+            self.onMouseOverAttributeIndex = self.attrFields.index(str(self.onMouseOverAttributeField))
         param = unicode(attrs[self.onMouseOverAttributeIndex])
-        htm = htm + 'onMouseOver="mapOnMouseOver(\'' + self.jsEscapeString(param) + '\')" '
-    if self.imageMapPluginGui.isOnMouseOutChecked():
-        param = unicode(attrs[self.onMouseOutAttributeIndex])
-        htm = htm + 'onMouseOut="mapOnMouseOut(\'' + self.jsEscapeString(param) + '\')" '
-    htm = htm + ' coords="'
+        self.infoBoxes.append(self.jsEscapeString(param))
+    htm = htm + 'coords="'
     lastPixel=[0,0]
     insideExtent = False
     coordCount = 0
@@ -378,12 +461,12 @@ class ImageMapPlugin:
         pixpoint =  self.w2p(point.x(), point.y(), 
                 self.iface.mapCanvas().mapUnitsPerPixel(),
                 extent.xMinimum(), extent.yMaximum())
-        if lastPixel<>pixpoint:
-            coordCount = coordCount +1
+        if lastPixel <> pixpoint:
+            coordCount = coordCount + 1
             htm += (str(pixpoint[0]) + ',' + str(pixpoint[1]) + ',')
             lastPixel = pixpoint
     htm = htm[0:-1]
-    # check if there are more then 2 coords: very small polygons on current map can have coordinates
+    # check if there are more than 2 coords: very small polygons on current map can have coordinates
     # which if rounded to pixels all come to the same pixel, resulting in just ONE x,y coordinate
     # we skip these
     if coordCount < 2:

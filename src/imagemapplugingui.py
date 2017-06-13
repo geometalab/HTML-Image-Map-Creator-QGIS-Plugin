@@ -23,14 +23,15 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
 
   def on_buttonBox_accepted(self):
     # check to see if at least one of the attr checkboxes are checked
-    if (not self.chkBoxHref.isChecked()) and (not self.chkBoxOnClick.isChecked()) and (not self.chkBoxOnMouseOver.isChecked()):
+    if (not self.chkBoxOnClick.isChecked()) and (not self.chkBoxOnMouseOver.isChecked()):
       QMessageBox.warning(self, self.MSG_BOX_TITLE, ("Not one attr checkbox checked?\n" "Please choose at least one attribute to use in AREA tags."), QMessageBox.Ok)
       return
     self.emit(SIGNAL("getFilesPath(QString)"), self.txtFileName.text() )
-    self.emit(SIGNAL("onHrefAttributeSet(QString)"), self.cmbAttributesHref.currentText() )
+    self.emit(SIGNAL("getIconFilePath(QString)"), self.txtIconFileName.text() )
+    # self.emit(SIGNAL("onHrefAttributeSet(QString)"), self.cmbAttributesHref.currentText() )
     self.emit(SIGNAL("onClickAttributeSet(QString)"), self.cmbAttributesOnClick.currentText() )
     self.emit(SIGNAL("onMouseOverAttributeSet(QString)"), self.cmbAttributesOnMouseOver.currentText() )
-    self.emit(SIGNAL("onMouseOutAttributeSet(QString)"), self.cmbAttributesOnMouseOut.currentText() )
+    # self.emit(SIGNAL("onMouseOutAttributeSet(QString)"), self.cmbAttributesOnMouseOut.currentText() )
     # and GO
     self.emit(SIGNAL("go(QString)"), "ok" )
     #self.done(1)   
@@ -48,8 +49,10 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
   def on_chkBoxSelectedOnly_stateChanged(self):
     self.emit(SIGNAL("getCbkBoxSelectedOnly(bool)"), self.chkBoxSelectedOnly.isChecked() )
 
+  """
   def on_chkBoxHref_stateChanged(self):
     self.cmbAttributesHref.setEnabled(self.chkBoxHref.isChecked())
+  """
 
   def on_chkBoxOnClick_stateChanged(self):
     self.cmbAttributesOnClick.setEnabled(self.chkBoxOnClick.isChecked())
@@ -57,9 +60,11 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
   def on_chkBoxOnMouseOver_stateChanged(self):
     self.cmbAttributesOnMouseOver.setEnabled(self.chkBoxOnMouseOver.isChecked())
 
+  """
   def on_chkBoxOnMouseOut_stateChanged(self):
     self.cmbAttributesOnMouseOut.setEnabled(self.chkBoxOnMouseOut.isChecked())
-
+  """
+  
   # if the text in this field is stil beginning with: 'full path and name'
   def on_txtFileName_cursorPositionChanged(self, old, new):
     if self.txtFileName.text().startswith(self.PATH_STRING):  # text() returns QString => startsWith instead startswith
@@ -73,19 +78,35 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
     # TODO do some checks to be sure there is no extension
     self.txtFileName.setText(fileName)
 
+  @pyqtSignature("on_btnIconFileBrowse_clicked()")  
+  def on_btnIconFileBrowse_clicked(self):
+    fileName = QFileDialog.getSaveFileName(self, self.PATH_STRING, "/", filter="*.svg;*.png;*.jpg", options=QFileDialog.DontConfirmOverwrite)
+    self.txtIconFileName.setText(fileName)
+    
+  """
   @pyqtSignature("on_btnSetImageSize_clicked()")
   def on_btnSetImageSize_clicked(self):
     self.emit(SIGNAL("setMapCanvasSize(int, int)"), self.spinBoxImageWidth.value(), self.spinBoxImageHeight.value() )
-
+  """
+  
   def setFilesPath(self, path):
     self.txtFileName.setText(path)
 
+  def setIconFilePath(self, path):
+    self.txtIconFileName.setText(path)
+    
+  def setLayerName(self, name):
+    self.txtLayerName.setText(name)
+  
+  def setFeatureCount(self, count):
+    self.featureCount.setText(count)
+  
   def setAttributeFields(self, layerAttr):
     # populate comboboxes with attribute field names of active layer
-    self.cmbAttributesHref.addItems(layerAttr)
+    # self.cmbAttributesHref.addItems(layerAttr)
     self.cmbAttributesOnClick.addItems(layerAttr)
     self.cmbAttributesOnMouseOver.addItems(layerAttr)
-    self.cmbAttributesOnMouseOut.addItems(layerAttr)
+    # self.cmbAttributesOnMouseOut.addItems(layerAttr)
 
   def setProgressBarMax(self, maxInt):
     # minimum default to zero
@@ -93,14 +114,17 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
     self.progressBar.setMaximum(maxInt)
 
   def setMapCanvasSize(self, width, height):
-    self.spinBoxImageWidth.setValue(width)
-    self.spinBoxImageHeight.setValue(height)
-
+    pass
+    # self.spinBoxImageWidth.setValue(width)
+    # self.spinBoxImageHeight.setValue(height)
+  
   def setProgressBarValue(self, valInt):
     self.progressBar.setValue(valInt)
 
+  """
   def isHrefChecked(self):
     return self.chkBoxHref.isChecked()
+  """
 
   def isOnClickChecked(self):
     return self.chkBoxOnClick.isChecked()
@@ -108,5 +132,7 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
   def isOnMouseOverChecked(self):
     return self.chkBoxOnMouseOver.isChecked()
   
+  """
   def isOnMouseOutChecked(self):
     return self.chkBoxOnMouseOut.isChecked()
+  """

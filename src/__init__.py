@@ -22,10 +22,10 @@ email                : richard@duif.net
 from imagemapplugin import ImageMapPlugin
 
 def name():
-    return "Html Image Map Plugin"
+    return "HTML Image Map Creator"
 
 def description():
-    return "This plugin generates a HTML-image map file+img from the active point or polygon layer"
+    return "This plugin generates a HTML image map from the active point or polygon layer"
 
 def qgisMinimumVersion():
     return "2.0"
@@ -34,10 +34,10 @@ def version():
     return "2.0.1"
 
 def author():
-    return "Richard Duivenvoorde"
+    return "Emil Sivro & SeverinFritschi"
 
 def email():
-    return "richard@duif.net"
+    return "emil.sivro@hsr.ch | severin.fritschi@hsr.ch"
 
 def category():
   return "Web"
