@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'html_image_map_creator_dialog_base.ui'
 #
-# Created: Wed Jun 14 08:14:07 2017
+# Created: Wed Jun 14 14:57:22 2017
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -34,7 +34,7 @@ class Ui_ImageMapPluginGui(object):
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.label = QtGui.QLabel(ImageMapPluginGui)
         self.label.setText(_fromUtf8(""))
-        self.label.setPixmap(QtGui.QPixmap(_fromUtf8(":/imageMap.png")))
+        self.label.setPixmap(QtGui.QPixmap(_fromUtf8(":/imagemap.png")))
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout.addWidget(self.label, 0, 0, 3, 1)
         self.line1 = QtGui.QFrame(ImageMapPluginGui)
