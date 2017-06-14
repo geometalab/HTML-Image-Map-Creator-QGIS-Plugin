@@ -2,11 +2,13 @@
 /***************************************************************************
 ImageMapPlugin
 
-This plugin generates a HTML-image map file+img from the active point 
+This plugin generates a HTML image map file+img from the active point 
 or polygon layer
 
-copyright            : (C) 2011 by Richard Duivenvoorde
-email                : richard@duif.net
+An adaptation of "imagemapplugin" by Richard Duivenvoorde.
+
+copyright            : (C) 2017 by Emil Sivro and Severin Fritschi
+email                : emil.sivro@hsr.ch | severin.fritschi@hsr.ch
  ***************************************************************************/
 
 /***************************************************************************
@@ -34,7 +36,7 @@ def version():
     return "2.0.1"
 
 def author():
-    return "Emil Sivro & SeverinFritschi"
+    return "Emil Sivro & Severin Fritschi"
 
 def email():
     return "emil.sivro@hsr.ch | severin.fritschi@hsr.ch"

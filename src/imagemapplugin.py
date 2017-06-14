@@ -2,11 +2,13 @@
 /***************************************************************************
 ImageMapPlugin
 
-This plugin generates a HTML-image map file+img from the active point 
+This plugin generates a HTML image map file+img from the active point 
 or polygon layer
 
-copyright            : (C) 2011 by Richard Duivenvoorde
-email                : richard@duif.net
+An adaptation of "imagemapplugin" by Richard Duivenvoorde.
+
+copyright            : (C) 2017 by Emil Sivro and Severin Fritschi
+email                : emil.sivro@hsr.ch | severin.fritschi@hsr.ch
  ***************************************************************************/
 
 /***************************************************************************
@@ -28,20 +30,21 @@ from qgis.core import *
 
 from imagemapplugingui import ImageMapPluginGui
 
-# initialize Qt resources from file
+# Initialize Qt resources from file
 import imagemapplugin_rc
 from shutil import copyfile
 
 class ImageMapPlugin:
 
-  MSG_BOX_TITLE = "QGis Html Image Map Plugin "
+  MSG_BOX_TITLE = "QGIS HTML Image Map Creator "
 
   def __init__(self, iface):
-    # save reference to the QGIS interface
+    # Save reference to the QGIS interface and initialize instance variables
     self.iface = iface
     self.filesPath = "/tmp/foo"
     self.attrFields = []
     self.layerName = ""
+    self.dimensions = ""
     self.iconFilePath = "/foo/bar.svg"
     self.labels = []
     self.infoBoxes = []
@@ -49,16 +52,16 @@ class ImageMapPlugin:
     self.featureCount = 0
 
   def initGui(self):
-    # create action that will start plugin configuration
-    self.action = QAction(QIcon(":/imagemapicon.xpm"), "Image Map", self.iface.mainWindow())
-    self.action.setWhatsThis("Configuration for Image Map plugin")
+    # Create action that will start plugin configuration
+    self.action = QAction(QIcon(":/imagemapicon.xpm"), "Create HTML image map...", self.iface.mainWindow())
+    self.action.setWhatsThis("Configuration for Image Map Creator")
     QObject.connect(self.action, SIGNAL("triggered()"), self.run)
-    # add toolbar button and menu item
+    # Add toolbar button and menu item
     self.iface.addToolBarIcon(self.action)
     if hasattr ( self.iface, "addPluginToWebMenu" ):
-        self.iface.addPluginToWebMenu("&Html Image Map Plugin", self.action)
+        self.iface.addPluginToWebMenu("&HTML Image Map Creator", self.action)
     else:
-        self.iface.addPluginToMenu("&Html Image Map Plugin", self.action)
+        self.iface.addPluginToMenu("&HTML Image Map Creator", self.action)
 
     #self.iface.pluginMenu().insertAction(self.action)
     # connect to signal renderComplete which is emitted when canvas rendering is done
@@ -67,9 +70,9 @@ class ImageMapPlugin:
   def unload(self):
     # remove the plugin menu item and icon
     if hasattr ( self.iface, "addPluginToWebMenu" ):
-        self.iface.removePluginWebMenu("&Html Image Map Plugin",self.action)
+        self.iface.removePluginWebMenu("&HTML Image Map Creator",self.action)
     else:
-        self.iface.removePluginMenu("&Html Image Map Plugin",self.action)
+        self.iface.removePluginMenu("&HTML Image Map Creator",self.action)
     self.iface.removeToolBarIcon(self.action)
     # disconnect form signal of the canvas
     QObject.disconnect(self.iface.mapCanvas(), SIGNAL("renderComplete(QPainter *)"), self.renderTest)
@@ -78,18 +81,18 @@ class ImageMapPlugin:
     # check if current active layer is a polygon layer:
     layer =  self.iface.activeLayer()
     if layer == None:
-        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No active layer found\n" "Please select a (multi) polygon or point layer first, \n" "by choosing a layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No active layer found\n" "Please select a (multi) polygon or point layer first, \n" "by selecting it in the legend"), QMessageBox.Ok, QMessageBox.Ok)
         return
     # don't know if this is possible / needed
     if not layer.isValid():
-        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No VALID layer found\n" "Please select a valid (multi) polygon or point layer first, \n" "by choosing a layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No VALID layer found\n" "Please select a valid (multi) polygon or point layer first, \n" "by selecting it in the legend"), QMessageBox.Ok, QMessageBox.Ok)
         return
     if (layer.type()>0): # 0 = vector, 1 = raster
-        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("Wrong layer type, only vector layers may be used..\n" "Please select a vector layer first, \n" "by choosing a vector layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("Wrong layer type, only vector layers may be used...\n" "Please select a vector layer first, \n" "by selecting it in the legend"), QMessageBox.Ok, QMessageBox.Ok)
         return
     self.provider = layer.dataProvider()
     if not(self.provider.geometryType() == QGis.WKBPolygon or self.provider.geometryType() == QGis.WKBMultiPolygon or self.provider.geometryType() == QGis.WKBPoint):
-        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("Wrong geometrytype, only (multi) polygons and points can be used.\n" "Please select a (multi )polygon or point layer first, \n" "by choosing a layer in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("Wrong geometry type, only (multi) polygons and points may be used.\n" "Please select a (multi) polygon or point layer first, \n" "by selecting it in the legend"), QMessageBox.Ok, QMessageBox.Ok)
         return
 
     # we need the fields of the active layer to show in the attribute combobox in the gui:
@@ -116,6 +119,7 @@ class ImageMapPlugin:
     # catch SIGNAL's
     QObject.connect(self.imageMapPluginGui, SIGNAL("getFilesPath(QString)"), self.setFilesPath)
     QObject.connect(self.imageMapPluginGui, SIGNAL("getLayerName(QString)"), self.setLayerName)
+    QObject.connect(self.imageMapPluginGui, SIGNAL("getDimensions(QString)"), self.setDimensions)
     QObject.connect(self.imageMapPluginGui, SIGNAL("getIconFilePath(QString)"), self.setIconFilePath)
     QObject.connect(self.imageMapPluginGui, SIGNAL("onHrefAttributeSet(QString)"), self.onHrefAttributeFieldSet)
     QObject.connect(self.imageMapPluginGui, SIGNAL("onClickAttributeSet(QString)"), self.onClickAttributeFieldSet)
@@ -128,14 +132,22 @@ class ImageMapPlugin:
     # remember old paths in this session:
     self.imageMapPluginGui.setFilesPath(self.filesPath)
     self.imageMapPluginGui.setIconFilePath(self.iconFilePath)
+    # Set active layer name and expected image dimensions
     self.imageMapPluginGui.setLayerName(self.iface.activeLayer().name())
-    self.imageMapPluginGui.setFeatureCount(str(self.iface.activeLayer().selectedFeatureCount()))
+    self.imageMapPluginGui.setDimensions("~ " + str(self.iface.mapCanvas().width()) + " x " + str(self.iface.mapCanvas().height()))
+    # Set number of selected features
+    msg = ""
+    featureCount = self.iface.activeLayer().selectedFeatureCount()
+    if featureCount > 0:
+        msg = " (selected feat. may be outside of extent)"
+    self.imageMapPluginGui.setFeatureCount(str(featureCount) + msg)
     self.imageMapPluginGui.show()
 
   def writeHtml(self):
     iconName = os.path.basename(os.path.normpath(self.iconFilePath))
     src = self.iconFilePath
     dst = os.path.dirname(self.filesPath) + "/" + iconName
+    # Copy marker symbol to export directory if it is located elsewhere
     if src <> dst:
         copyfile(src, dst)
     # create a holder for retrieving features from the provider
@@ -150,6 +162,7 @@ class ImageMapPlugin:
         html.append(u'<div id="info-box" class="hidden"></div>')
     if isLabelChecked:
         html.append(u'<div class="title-box"></div>')
+    # Write necessary CSS content:
     html.append(u'<style type="text/css">')
     html.append(u'#map-container { width: auto; height: auto; z-index: 0; position: relative; } .icons { z-index: 10; position: absolute; } body { font-family: Arial, Helvetica, sans-serif; } ')
     if isInfoChecked:
@@ -224,18 +237,20 @@ class ImageMapPlugin:
             progressValue = progressValue+1
             self.imageMapPluginGui.setProgressBarValue(progressValue)
     html.append(u'</map>')
+    # Write necessary JavaScript content:
     html.append(u'<script type="text/javascript">\n')
-    html.append(u'(function() { "use strict"; var areas = document.querySelectorAll("area"); for (var i = 0; i < areas.length; i++) { var img = new Image(); var centroid = getAreaCenter(areas[i].getAttribute("coords")); img.id = i.toString(); img.src = "'+ iconName +'"; img.className = "hidden"; document.getElementById("container").appendChild(img); img.style.left = centroid[0] + "px"; img.style.top = centroid[1] + "px"; img.onload = function() { this.style.left = parseInt(this.style.left, 10) - img.width / 2 + "px"; this.className = "icons"; ')
+    html.append(u'(function() { "use strict"; var areas = document.querySelectorAll("area"); for (var i = 0; i < areas.length; i++) { var img = new Image(); var centroid = getAreaCenter(areas[i].getAttribute("coords")); img.id = i.toString(); img.src = "'+ iconName +'"; img.className = "hidden"; document.getElementById("container").appendChild(img); img.style.left = centroid[0] + "px"; img.style.top = centroid[1] + "px"; img.onload = function() { this.style.left = parseInt(this.style.left, 10) - this.width / 2 + 8 + "px"; this.style.top = parseInt(this.style.top, 10) - this.height / 2 + 25 + "px"; this.className = "icons"; ')
     if isLabelChecked:
         html.append(u'var boundingBox = this.getBoundingClientRect(); var centerX = boundingBox.width / 2 + boundingBox.left; var centerY = boundingBox.height + boundingBox.top; displayElementText(centerX, centerY, Number(this.id));')
     html.append(u' } } ')
     if isInfoChecked:
         html.append(u'document.addEventListener("click", function(e) { if (e.target.className === "icons") { var boundingBox = e.target.getBoundingClientRect(); var centerX = boundingBox.width / 2 + boundingBox.left; var centerY = boundingBox.top + boundingBox.height / 2; document.getElementById("info-box").className = "visible"; displayBox(centerX, centerY, Number(e.target.id)); } else { hideBox(); } }); ')
-        html.append(u'function displayBox(centerX, centerY, id) { var infoBox = document.getElementById("info-box"); var infoWidthToCenter = infoBox.offsetWidth / 2; var infoHeight = infoBox.offsetHeight; infoBox.innerHTML = infoBoxes[id]; infoBox.style.left = (centerX - infoWidthToCenter - 10) + "px"; infoBox.style.top = (centerY - infoHeight - 15) + "px"; } ')
+        html.append(u'function displayBox(centerX, centerY, id) { var infoBox = document.getElementById("info-box"); var infoWidthToCenter = infoBox.offsetWidth / 2; var infoHeight = infoBox.offsetHeight; infoBox.innerHTML = infoBoxes[id]; infoBox.style.left = (centerX - infoWidthToCenter - 9) + "px"; infoBox.style.top = (centerY - infoHeight - 15) + "px"; } ')
         html.append(u'function hideBox() { document.getElementById("info-box").className = "hidden"; } ')
     if isLabelChecked:
-        html.append(u'function displayElementText(centerX, centerY, id) { var titleBoxContainer = document.getElementsByClassName("title-box")[0]; var titleBox = document.createElement("title-box"); titleBox.className = "title-box"; titleBox.innerHTML = labels[id]; titleBoxContainer.appendChild(titleBox); var titleWidthToCenter = titleBox.offsetWidth / 2; var titleHeightToCenter = titleBox.offsetHeight; titleBox.style.left = (centerX - titleWidthToCenter - 10) + "px"; titleBox.style.top = (centerY - titleHeightToCenter + 5) + "px"; } ')
+        html.append(u'function displayElementText(centerX, centerY, id) { var titleBoxContainer = document.getElementsByClassName("title-box")[0]; var titleBox = document.createElement("title-box"); titleBox.className = "title-box"; titleBox.innerHTML = labels[id]; titleBoxContainer.appendChild(titleBox); var titleWidthToCenter = titleBox.offsetWidth / 2; var titleHeightToCenter = titleBox.offsetHeight; titleBox.style.left = (centerX - titleWidthToCenter - 8) + "px"; titleBox.style.top = (centerY - titleHeightToCenter + 5) + "px"; } ')
     html.append(u'function getAreaCenter(coords) { var coordsArray = coords.split(","), center = []; var coord, maxX, maxY, minX = maxX = parseInt(coordsArray[0], 10), minY = maxY = parseInt(coordsArray[1], 10); for (var i = 0; i < coordsArray.length; i++) { coord = parseInt(coordsArray[i], 10); if (i % 2 === 0) { if (coord < minX) { minX = coord; } else if (coord > maxX) { maxX = coord; } } else { if (coord < minY) { minY = coord; } else if (coord > maxY) { maxY = coord; } } } center = [parseInt((minX + maxX) / 2, 10), parseInt((minY + maxY) / 2, 10)]; return center; } ')
+    # Dynamically write JavaScript array from field attribute array
     if len(self.labels) > 0:
         labelCounter = 0
         for l in self.labels:
@@ -266,6 +281,7 @@ class ImageMapPlugin:
                     html.append(u'"'+ i +'"]; ')
                     break
                 infoBoxCounter = infoBoxCounter + 1
+    # Clean up arrays afterwards
     del self.labels[:]
     del self.infoBoxes[:]
     html.append(u'})();\n')
@@ -331,6 +347,9 @@ class ImageMapPlugin:
     
   def setLayerName(self, layerNameQString):
     self.layerName = layerNameQString
+  
+  def setDimensions(self, dimensionsQString):
+    self.dimensions = dimensionsQString
     
   def onHrefAttributeFieldSet(self, attributeFieldQstring):
     self.hrefAttributeField = attributeFieldQstring
@@ -412,7 +431,7 @@ class ImageMapPlugin:
         QMessageBox.information(self.iface.mainWindow(), self.MSG_BOX_TITLE, ( msg ), QMessageBox.Ok)
         self.imageMapPluginGui.hide()
     except IOError:
-        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No valid path or filename.\n" "Please give or browse a valid filename."), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No valid path or file name.\n" "Please enter or browse a valid file name."), QMessageBox.Ok, QMessageBox.Ok)
 
 
   # NOT WORKING ????
@@ -424,7 +443,7 @@ class ImageMapPlugin:
     pixY = (y - maxy)/mupp
     return [int(pixX), int(-pixY)]
 
-  # for given ring in feature, IF at least on point on ring is in mapCanvasExtent
+  # for given ring in feature, IF at least one point in ring is in mapCanvasExtent
   # generate a string like:
   # <area data-info-id=x shape=polygon coords=519,-52,519,..,-52,519,-52 alt=...>
   def ring2area(self, feature, ring, extent, extentAsPoly):
@@ -438,17 +457,17 @@ class ImageMapPlugin:
         attrs = feature
     # escape ' and " because they will collapse as javascript parameter
     if self.imageMapPluginGui.isOnClickChecked():
-        # Negative index in this context means the field in question is a virtual one
+        # A negative index in this context means the field in question is a virtual one
         if self.onClickAttributeIndex < 0:
             # This is a workaround, since the data provider cannot find the virtual fields
             self.onClickAttributeIndex = self.attrFields.index(str(self.onClickAttributeField))
         param = unicode(attrs[self.onClickAttributeIndex])
-        self.labels.append(self.jsEscapeString(param))
+        self.labels.append(self.escapeNewLine(param))
     if self.imageMapPluginGui.isOnMouseOverChecked():
         if self.onMouseOverAttributeIndex < 0:
             self.onMouseOverAttributeIndex = self.attrFields.index(str(self.onMouseOverAttributeField))
         param = unicode(attrs[self.onMouseOverAttributeIndex])
-        self.infoBoxes.append(self.jsEscapeString(param))
+        self.infoBoxes.append(self.escapeNewLine(param))
     htm = htm + 'coords="'
     lastPixel=[0,0]
     insideExtent = False
@@ -480,8 +499,7 @@ class ImageMapPlugin:
         # using last param as alt parameter (to be W3 compliant we need one)
         htm += '" alt="' + param + '">\n'
         return unicode(htm)
-
-
-  # escape ' and " so string can be safely used as string javascript argument
-  def jsEscapeString(self, str):
-    return unicode(str.replace("'", "\\'").replace('"', '\"'))
+        
+  # Prevent new lines inside JavaScript array
+  def escapeNewLine(self, str):
+    return "".join(str.split("\n"))

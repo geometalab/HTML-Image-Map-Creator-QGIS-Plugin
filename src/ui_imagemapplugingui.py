@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'html_image_map_creator_dialog_base.ui'
 #
-# Created: Mon Jun 12 13:37:13 2017
+# Created: Wed Jun 14 08:14:07 2017
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_ImageMapPluginGui(object):
     def setupUi(self, ImageMapPluginGui):
         ImageMapPluginGui.setObjectName(_fromUtf8("ImageMapPluginGui"))
-        ImageMapPluginGui.resize(718, 513)
+        ImageMapPluginGui.resize(790, 513)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         ImageMapPluginGui.setWindowIcon(icon)
@@ -34,7 +34,7 @@ class Ui_ImageMapPluginGui(object):
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.label = QtGui.QLabel(ImageMapPluginGui)
         self.label.setText(_fromUtf8(""))
-        self.label.setPixmap(QtGui.QPixmap(_fromUtf8(":/imagemap.png")))
+        self.label.setPixmap(QtGui.QPixmap(_fromUtf8(":/imageMap.png")))
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout.addWidget(self.label, 0, 0, 3, 1)
         self.line1 = QtGui.QFrame(ImageMapPluginGui)
@@ -79,11 +79,19 @@ class Ui_ImageMapPluginGui(object):
         self.buttonBox = QtGui.QDialogButtonBox(ImageMapPluginGui)
         self.buttonBox.setEnabled(True)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Help|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
         self.gridLayout.addWidget(self.buttonBox, 4, 0, 1, 3)
         self.gridLayout_3 = QtGui.QGridLayout()
         self.gridLayout_3.setObjectName(_fromUtf8("gridLayout_3"))
+        self.lblDimensions = QtGui.QLabel(ImageMapPluginGui)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lblDimensions.sizePolicy().hasHeightForWidth())
+        self.lblDimensions.setSizePolicy(sizePolicy)
+        self.lblDimensions.setObjectName(_fromUtf8("lblDimensions"))
+        self.gridLayout_3.addWidget(self.lblDimensions, 1, 0, 1, 1)
         self.lblActiveLayer = QtGui.QLabel(ImageMapPluginGui)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
@@ -91,7 +99,7 @@ class Ui_ImageMapPluginGui(object):
         sizePolicy.setHeightForWidth(self.lblActiveLayer.sizePolicy().hasHeightForWidth())
         self.lblActiveLayer.setSizePolicy(sizePolicy)
         self.lblActiveLayer.setObjectName(_fromUtf8("lblActiveLayer"))
-        self.gridLayout_3.addWidget(self.lblActiveLayer, 1, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.lblActiveLayer, 2, 0, 1, 1)
         self.lblFilename = QtGui.QLabel(ImageMapPluginGui)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
@@ -134,10 +142,13 @@ class Ui_ImageMapPluginGui(object):
         self.txtFileName = QtGui.QLineEdit(ImageMapPluginGui)
         self.txtFileName.setObjectName(_fromUtf8("txtFileName"))
         self.gridLayout_3.addWidget(self.txtFileName, 3, 1, 1, 2)
+        self.txtDimensions = QtGui.QLabel(ImageMapPluginGui)
+        self.txtDimensions.setObjectName(_fromUtf8("txtDimensions"))
+        self.gridLayout_3.addWidget(self.txtDimensions, 1, 1, 1, 1)
         self.txtLayerName = QtGui.QLineEdit(ImageMapPluginGui)
         self.txtLayerName.setEnabled(False)
         self.txtLayerName.setObjectName(_fromUtf8("txtLayerName"))
-        self.gridLayout_3.addWidget(self.txtLayerName, 1, 1, 1, 2)
+        self.gridLayout_3.addWidget(self.txtLayerName, 2, 1, 1, 2)
         self.chkBoxSelectedOnly = QtGui.QCheckBox(ImageMapPluginGui)
         self.chkBoxSelectedOnly.setObjectName(_fromUtf8("chkBoxSelectedOnly"))
         self.gridLayout_3.addWidget(self.chkBoxSelectedOnly, 9, 0, 1, 2)
@@ -149,24 +160,26 @@ class Ui_ImageMapPluginGui(object):
         self.featureCount.setSizePolicy(sizePolicy)
         self.featureCount.setText(_fromUtf8(""))
         self.featureCount.setObjectName(_fromUtf8("featureCount"))
-        self.gridLayout_3.addWidget(self.featureCount, 9, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.featureCount, 9, 1, 1, 3)
         self.gridLayout.addLayout(self.gridLayout_3, 2, 2, 1, 1)
 
         self.retranslateUi(ImageMapPluginGui)
         QtCore.QMetaObject.connectSlotsByName(ImageMapPluginGui)
 
     def retranslateUi(self, ImageMapPluginGui):
-        ImageMapPluginGui.setWindowTitle(_translate("ImageMapPluginGui", "Html Image Map Creator", None))
-        self.txtHeading.setText(_translate("ImageMapPluginGui", "Html Image Map Creator", None))
+        ImageMapPluginGui.setWindowTitle(_translate("ImageMapPluginGui", "HTML Image Map Creator", None))
+        self.txtHeading.setText(_translate("ImageMapPluginGui", "HTML Image Map Creator", None))
         self.textEdit.setHtml(_translate("ImageMapPluginGui", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'Sans\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">This plugin will generate a HTML file and a corresponding image file. </span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">This plugin will generate a HTML file along with a corresponding PNG file taken from the current map canvas extent. </span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:6pt;\"> </span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- It can be used for active (multi) polygon or point vector layers (e.g. Shapefiles or PostGIS layers).</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- The HTML file will contain the &lt;img&gt; and image &lt;map&gt; source .</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- The marker symbol of your choosing will be copied to the export directory.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- The HTML file will contain the &lt;img&gt; and image &lt;map&gt; source.</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- Use \'Selected features only\' to generate &lt;area&gt; tags for selected features only.</span></p></body></html>", None))
+        self.lblDimensions.setText(_translate("ImageMapPluginGui", "Image dimensions", None))
         self.lblActiveLayer.setText(_translate("ImageMapPluginGui", "Active layer", None))
         self.lblFilename.setText(_translate("ImageMapPluginGui", "Export file name", None))
         self.btnBrowse.setText(_translate("ImageMapPluginGui", "Browse", None))
@@ -177,4 +190,4 @@ class Ui_ImageMapPluginGui(object):
         self.txtFileName.setText(_translate("ImageMapPluginGui", "Path and name without extension", None))
         self.chkBoxSelectedOnly.setText(_translate("ImageMapPluginGui", "Selected features only", None))
 
-import imagemapplugin_rc
+import resources_rc
