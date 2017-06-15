@@ -497,7 +497,7 @@ class ImageMapPlugin:
         return ''
     else:
         # using last param as alt parameter (to be W3 compliant we need one)
-        htm += '" alt="' + param + '">\n'
+        htm += '" alt="' + self.escapeNewLine(param) + '">\n'
         return unicode(htm)
         
   # Prevent new lines inside JavaScript array
