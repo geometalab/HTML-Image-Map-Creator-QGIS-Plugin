@@ -238,6 +238,7 @@ class ImageMapPlugin:
             self.imageMapPluginGui.setProgressBarValue(progressValue)
     html.append(u'</map>')
     # Write necessary JavaScript content:
+    html.append(u'<script type="text/javascript">\n')
     html.append(u'(function() { "use strict"; var offsetHeight = document.getElementById("map-container").offsetHeight - 10; var areas = document.querySelectorAll("area"); for (var i = 0; i < areas.length; i++) { var img = new Image(); var centroid = getAreaCenter(areas[i].getAttribute("coords")); img.id = i.toString(); img.src = "'+ iconName +'"; img.className = "hidden"; document.getElementById("container").appendChild(img); img.style.left = centroid[0] + "px"; img.style.top = centroid[1] + "px"; img.onload = function() { this.style.left = parseInt(this.style.left, 10) - this.width / 2 + 8 + "px"; this.style.top = parseInt(this.style.top, 10) - this.height / 2 + 25 + "px"; this.className = "icons"; ')
     if isLabelChecked:
         html.append(u'var boundingBox = this.getBoundingClientRect(); this.style.top = parseInt(this.style.top, 10) + offsetHeight + "px"; var centerX = boundingBox.width / 2 + boundingBox.left + document.body.scrollLeft; var centerY = boundingBox.height + boundingBox.top + document.body.scrollTop; displayElementText(centerX, centerY, Number(this.id));')
