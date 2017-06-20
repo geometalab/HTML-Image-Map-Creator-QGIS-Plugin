@@ -159,7 +159,7 @@ class ImageMapPlugin:
     html = [u'<!DOCTYPE HTML><html>']
     isLabelChecked = self.imageMapPluginGui.isOnClickChecked()
     isInfoChecked = self.imageMapPluginGui.isOnMouseOverChecked()
-    html.append(u'<head><title>'+ self.iface.activeLayer().name() +'</title></head><body>')
+    html.append(u'<head><title>'+ self.iface.activeLayer().name() +'</title><meta charset="UTF-8"></head><body>')
     if isInfoChecked:
         html.append(u'<div id="info-box" class="hidden"></div>')
     if isLabelChecked:
