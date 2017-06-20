@@ -26,13 +26,13 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
 
   def on_buttonBox_accepted(self):
     # Make sure at least one checkbox is checked
-    if (not self.chkBoxOnClick.isChecked()) and (not self.chkBoxOnMouseOver.isChecked()):
+    if (not self.chkBoxLabel.isChecked()) and (not self.chkBoxInfoBox.isChecked()):
       QMessageBox.warning(self, self.MSG_BOX_TITLE, ("Not a single option checked?\n" "Please choose at least one attribute to use on marker symbols."), QMessageBox.Ok)
       return
     self.emit(SIGNAL("getFilesPath(QString)"), self.txtFileName.text() )
     self.emit(SIGNAL("getIconFilePath(QString)"), self.txtIconFileName.text() )
-    self.emit(SIGNAL("onClickAttributeSet(QString)"), self.cmbAttributesOnClick.currentText() )
-    self.emit(SIGNAL("onMouseOverAttributeSet(QString)"), self.cmbAttributesOnMouseOver.currentText() )
+    self.emit(SIGNAL("labelAttributeSet(QString)"), self.cmbLabelAttributes.currentText() )
+    self.emit(SIGNAL("infoBoxAttributeSet(QString)"), self.cmbInfoBoxAttributes.currentText() )
     # and GO
     self.emit(SIGNAL("go(QString)"), "ok" )
     #self.done(1)   
@@ -43,13 +43,13 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
   def on_chkBoxSelectedOnly_stateChanged(self):
     self.emit(SIGNAL("getCbkBoxSelectedOnly(bool)"), self.chkBoxSelectedOnly.isChecked() )
 
-  def on_chkBoxOnClick_stateChanged(self):
-    self.cmbAttributesOnClick.setEnabled(self.chkBoxOnClick.isChecked())
+  def on_chkBoxLabel_stateChanged(self):
+    self.cmbLabelAttributes.setEnabled(self.chkBoxLabel.isChecked())
     
-  def on_chkBoxOnMouseOver_stateChanged(self):
-    self.cmbAttributesOnMouseOver.setEnabled(self.chkBoxOnMouseOver.isChecked())
+  def on_chkBoxInfoBox_stateChanged(self):
+    self.cmbInfoBoxAttributes.setEnabled(self.chkBoxInfoBox.isChecked())
   
-  # if the text in this field is stil beginning with: 'full path and name'
+  # If the text in this field still begins with: 'full path and name'
   def on_txtFileName_cursorPositionChanged(self, old, new):
     if self.txtFileName.text().startswith(self.PATH_STRING):  # text() returns QString => startsWith instead startswith
         self.txtFileName.setText('')
@@ -58,24 +58,35 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
   # without this magic, the on_btnOk_clicked will be called two times: one clicked() and one clicked(bool checked)
   @pyqtSignature("on_btnBrowse_clicked()")
   def on_btnBrowse_clicked(self):
+    # Remember previously browsed directories
     if self.txtFileName.text() <> "":
         self.currentFileName = self.txtFileName.text()
     empty = self.currentFileName == ""
+    # Set current default export directory to the recently browsed file directory
     saveFileName = QFileDialog.getSaveFileName(self, self.PATH_STRING, os.path.dirname(self.currentFileName) if not empty else "/", "")
-    self.currentFileName = saveFileName if saveFileName <> "" else self.currentFileName
+    # If user clicks 'cancel' or enters empty string, the current file name is not overwritten
+    if saveFileName <> "":
+        self.currentFileName = saveFileName
+    # If current file name is not empty, it is written into the line edit field
     if self.currentFileName <> "":
         self.txtFileName.setText(self.currentFileName)
 
   @pyqtSignature("on_btnIconFileBrowse_clicked()")  
   def on_btnIconFileBrowse_clicked(self):
+    # Remember previously browsed directories
     if self.txtIconFileName.text() <> "":
         self.currentIconName = self.txtIconFileName.text()
     empty = self.currentIconName == ""
     svgPath = "/"
+    # If there is a svg path at the index 0, use that as the initial default directory
     if QgsApplication.svgPaths()[0]:
         svgPath = QgsApplication.svgPaths()[0]
+    # After this, set current default icon directory to the recently browsed icon directory
     saveIconName = QFileDialog.getSaveFileName(self, "Marker symbol", os.path.dirname(self.currentIconName) if not empty else svgPath, filter="*.svg;*.png;*.jpg", options=QFileDialog.DontConfirmOverwrite)
-    self.currentIconName = saveIconName if saveIconName <> "" else self.currentIconName
+    # If user clicks 'cancel' or enters empty string, the current icon directory is not overwritten
+    if saveIconName <> "":
+        self.currentIconName = saveIconName
+    # If current icon name is not empty, it is written into the line edit field
     if self.currentIconName <> "":
         self.txtIconFileName.setText(self.currentIconName)
     
@@ -96,24 +107,19 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
   
   def setAttributeFields(self, layerAttr):
     # populate comboboxes with attribute field names of active layer
-    self.cmbAttributesOnClick.addItems(layerAttr)
-    self.cmbAttributesOnMouseOver.addItems(layerAttr)
+    self.cmbLabelAttributes.addItems(layerAttr)
+    self.cmbInfoBoxAttributes.addItems(layerAttr)
 
   def setProgressBarMax(self, maxInt):
     # minimum default to zero
     self.progressBar.setMinimum(0)
     self.progressBar.setMaximum(maxInt)
-
-  def setMapCanvasSize(self, width, height):
-    pass
-    # self.spinBoxImageWidth.setValue(width)
-    # self.spinBoxImageHeight.setValue(height)
   
   def setProgressBarValue(self, valInt):
     self.progressBar.setValue(valInt)
 
-  def isOnClickChecked(self):
-    return self.chkBoxOnClick.isChecked()
+  def isLabelChecked(self):
+    return self.chkBoxLabel.isChecked()
 
-  def isOnMouseOverChecked(self):
-    return self.chkBoxOnMouseOver.isChecked()
+  def isInfoBoxChecked(self):
+    return self.chkBoxInfoBox.isChecked()

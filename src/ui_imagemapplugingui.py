@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'html_image_map_creator_dialog_base.ui'
 #
-# Created: Tue Jun 20 09:17:59 2017
+# Created: Tue Jun 20 14:57:12 2017
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -125,20 +125,20 @@ class Ui_ImageMapPluginGui(object):
         self.txtIconFileName = QtGui.QLineEdit(ImageMapPluginGui)
         self.txtIconFileName.setObjectName(_fromUtf8("txtIconFileName"))
         self.gridLayout_3.addWidget(self.txtIconFileName, 4, 1, 1, 2)
-        self.chkBoxOnClick = QtGui.QCheckBox(ImageMapPluginGui)
-        self.chkBoxOnClick.setObjectName(_fromUtf8("chkBoxOnClick"))
-        self.gridLayout_3.addWidget(self.chkBoxOnClick, 5, 0, 1, 1)
-        self.cmbAttributesOnClick = QtGui.QComboBox(ImageMapPluginGui)
-        self.cmbAttributesOnClick.setEnabled(False)
-        self.cmbAttributesOnClick.setObjectName(_fromUtf8("cmbAttributesOnClick"))
-        self.gridLayout_3.addWidget(self.cmbAttributesOnClick, 5, 1, 1, 3)
-        self.chkBoxOnMouseOver = QtGui.QCheckBox(ImageMapPluginGui)
-        self.chkBoxOnMouseOver.setObjectName(_fromUtf8("chkBoxOnMouseOver"))
-        self.gridLayout_3.addWidget(self.chkBoxOnMouseOver, 6, 0, 1, 1)
-        self.cmbAttributesOnMouseOver = QtGui.QComboBox(ImageMapPluginGui)
-        self.cmbAttributesOnMouseOver.setEnabled(False)
-        self.cmbAttributesOnMouseOver.setObjectName(_fromUtf8("cmbAttributesOnMouseOver"))
-        self.gridLayout_3.addWidget(self.cmbAttributesOnMouseOver, 6, 1, 1, 3)
+        self.chkBoxLabel = QtGui.QCheckBox(ImageMapPluginGui)
+        self.chkBoxLabel.setObjectName(_fromUtf8("chkBoxLabel"))
+        self.gridLayout_3.addWidget(self.chkBoxLabel, 5, 0, 1, 1)
+        self.cmbLabelAttributes = QtGui.QComboBox(ImageMapPluginGui)
+        self.cmbLabelAttributes.setEnabled(False)
+        self.cmbLabelAttributes.setObjectName(_fromUtf8("cmbLabelAttributes"))
+        self.gridLayout_3.addWidget(self.cmbLabelAttributes, 5, 1, 1, 3)
+        self.chkBoxInfoBox = QtGui.QCheckBox(ImageMapPluginGui)
+        self.chkBoxInfoBox.setObjectName(_fromUtf8("chkBoxInfoBox"))
+        self.gridLayout_3.addWidget(self.chkBoxInfoBox, 6, 0, 1, 1)
+        self.cmbInfoBoxAttributes = QtGui.QComboBox(ImageMapPluginGui)
+        self.cmbInfoBoxAttributes.setEnabled(False)
+        self.cmbInfoBoxAttributes.setObjectName(_fromUtf8("cmbInfoBoxAttributes"))
+        self.gridLayout_3.addWidget(self.cmbInfoBoxAttributes, 6, 1, 1, 3)
         self.txtFileName = QtGui.QLineEdit(ImageMapPluginGui)
         self.txtFileName.setObjectName(_fromUtf8("txtFileName"))
         self.gridLayout_3.addWidget(self.txtFileName, 3, 1, 1, 2)
@@ -176,15 +176,15 @@ class Ui_ImageMapPluginGui(object):
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:6pt;\"> </span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- It can be used on any active point or (multi-)polygon vector layer (Geopackage, Shapefile etc.).</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- The marker symbol of your choosing will be copied over to the export directory.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- The marker label and the body of the infobox will use the individual field attribute as their text and look like as shown in the picture on the left.</span></p></body></html>", None))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- The marker label and the body of the infobox will use the individual field attribute as their text. An example of this is shown in the picture on the left.</span></p></body></html>", None))
         self.lblDimensions.setText(_translate("ImageMapPluginGui", "Image dimensions", None))
         self.lblActiveLayer.setText(_translate("ImageMapPluginGui", "Active layer", None))
         self.lblFilename.setText(_translate("ImageMapPluginGui", "Export path and filename", None))
         self.btnBrowse.setText(_translate("ImageMapPluginGui", "Browse", None))
         self.lblIconFileName.setText(_translate("ImageMapPluginGui", "Marker symbol", None))
         self.btnIconFileBrowse.setText(_translate("ImageMapPluginGui", "Browse", None))
-        self.chkBoxOnClick.setText(_translate("ImageMapPluginGui", "Marker label", None))
-        self.chkBoxOnMouseOver.setText(_translate("ImageMapPluginGui", "Body of infobox", None))
+        self.chkBoxLabel.setText(_translate("ImageMapPluginGui", "Marker label", None))
+        self.chkBoxInfoBox.setText(_translate("ImageMapPluginGui", "Body of infobox", None))
         self.txtFileName.setText(_translate("ImageMapPluginGui", "Path and name without extension", None))
         self.chkBoxSelectedOnly.setText(_translate("ImageMapPluginGui", "Selected features only", None))
 

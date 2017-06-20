@@ -92,7 +92,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:6pt;&quot;&gt; &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif';&quot;&gt;- It can be used on any active point or (multi-)polygon vector layer (Geopackage, Shapefile etc.).&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif';&quot;&gt;- The marker symbol of your choosing will be copied over to the export directory.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif';&quot;&gt;- The marker label and the body of the infobox will use the individual field attribute as their text and look like as shown in the picture on the left.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif';&quot;&gt;- The marker label and the body of the infobox will use the individual field attribute as their text. An example of this is shown in the picture on the left.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
@@ -189,28 +189,28 @@ p, li { white-space: pre-wrap; }
       </widget>
      </item>
      <item row="5" column="0">
-      <widget class="QCheckBox" name="chkBoxOnClick">
+      <widget class="QCheckBox" name="chkBoxLabel">
        <property name="text">
         <string>Marker label</string>
        </property>
       </widget>
      </item>
      <item row="5" column="1" colspan="3">
-      <widget class="QComboBox" name="cmbAttributesOnClick">
+      <widget class="QComboBox" name="cmbLabelAttributes">
        <property name="enabled">
         <bool>false</bool>
        </property>
       </widget>
      </item>
      <item row="6" column="0">
-      <widget class="QCheckBox" name="chkBoxOnMouseOver">
+      <widget class="QCheckBox" name="chkBoxInfoBox">
        <property name="text">
         <string>Body of infobox</string>
        </property>
       </widget>
      </item>
      <item row="6" column="1" colspan="3">
-      <widget class="QComboBox" name="cmbAttributesOnMouseOver">
+      <widget class="QComboBox" name="cmbInfoBoxAttributes">
        <property name="enabled">
         <bool>false</bool>
        </property>

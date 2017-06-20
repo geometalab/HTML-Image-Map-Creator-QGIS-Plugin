@@ -32,6 +32,7 @@ from imagemapplugingui import ImageMapPluginGui
 
 # Initialize Qt resources from file
 import imagemapplugin_rc
+
 from shutil import copyfile
 
 class ImageMapPlugin:
@@ -113,7 +114,6 @@ class ImageMapPlugin:
     if hasattr(self, 'imageMapPlugin') == False:
         self.imageMapPluginGui = ImageMapPluginGui(self.iface.mainWindow(), flags)
     self.imageMapPluginGui.setAttributeFields(self.attrFields)
-    self.imageMapPluginGui.setMapCanvasSize(self.iface.mapCanvas().width(), self.iface.mapCanvas().height())
     self.layerAttr = self.attrFields
     self.selectedFeaturesOnly = False # default all features in current extent
     # catch SIGNAL's
@@ -121,10 +121,8 @@ class ImageMapPlugin:
     QObject.connect(self.imageMapPluginGui, SIGNAL("getLayerName(QString)"), self.setLayerName)
     QObject.connect(self.imageMapPluginGui, SIGNAL("getDimensions(QString)"), self.setDimensions)
     QObject.connect(self.imageMapPluginGui, SIGNAL("getIconFilePath(QString)"), self.setIconFilePath)
-    QObject.connect(self.imageMapPluginGui, SIGNAL("onHrefAttributeSet(QString)"), self.onHrefAttributeFieldSet)
-    QObject.connect(self.imageMapPluginGui, SIGNAL("onClickAttributeSet(QString)"), self.onClickAttributeFieldSet)
-    QObject.connect(self.imageMapPluginGui, SIGNAL("onMouseOverAttributeSet(QString)"), self.onMouseOverAttributeFieldSet)
-    QObject.connect(self.imageMapPluginGui, SIGNAL("onMouseOutAttributeSet(QString)"), self.onMouseOutAttributeFieldSet)
+    QObject.connect(self.imageMapPluginGui, SIGNAL("labelAttributeSet(QString)"), self.labelAttributeFieldSet)
+    QObject.connect(self.imageMapPluginGui, SIGNAL("infoBoxAttributeSet(QString)"), self.infoBoxAttributeFieldSet)
     QObject.connect(self.imageMapPluginGui, SIGNAL("getCbkBoxSelectedOnly(bool)"), self.setSelectedOnly)
     QObject.connect(self.imageMapPluginGui, SIGNAL("getSelectedFeatureCount(QString)"), self.setFeatureCount)
     QObject.connect(self.imageMapPluginGui, SIGNAL("go(QString)"), self.go)
@@ -157,16 +155,19 @@ class ImageMapPlugin:
     temp = unicode(self.filesPath+".png")
     imgfilename = os.path.basename(temp)
     html = [u'<!DOCTYPE HTML><html>']
-    isLabelChecked = self.imageMapPluginGui.isOnClickChecked()
-    isInfoChecked = self.imageMapPluginGui.isOnMouseOverChecked()
+    isLabelChecked = self.imageMapPluginGui.isLabelChecked()
+    isInfoChecked = self.imageMapPluginGui.isInfoBoxChecked()
     html.append(u'<head><title>'+ self.iface.activeLayer().name() +'</title><meta charset="UTF-8"></head><body>')
     if isInfoChecked:
         html.append(u'<div id="info-box" class="hidden"></div>')
     if isLabelChecked:
         html.append(u'<div class="title-box"></div>')
-    # Write necessary CSS content:
+    # Write necessary CSS content for corresponding features, namely "label" and "infoBox":
     html.append(u'<style type="text/css">')
-    html.append(u'#map-container { width: auto; height: auto; z-index: 0; position: relative; } .icons { z-index: 10; position: absolute; cursor: pointer; cursor: hand; } body { font-family: Arial, Helvetica, sans-serif; } ')
+    html.append(u'#map-container { width: auto; height: auto; z-index: 0; position: relative; } .icons { z-index: 10; position: absolute; ')
+    if isInfoChecked:
+        html.append(u'cursor: pointer; cursor: hand; ')
+    html.append(u'} body { font-family: Arial, Helvetica, sans-serif; } ')
     if isInfoChecked:
         html.append(u'#info-box { position: absolute; visibility: visible; z-index: 50; background-color: #FFFFFF; width: 250px; height: 114px; padding: 10px; margin: 0; border-radius: 10px; box-shadow: 4px 4px 2px 0 rgba(0, 0, 0, 0.75); font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 130%; color: #5F5F5F; } #info-box:after { content: ""; position: absolute; border-style: solid; border-width: 15px 15px 0; border-color: #FFFFFF transparent; display: block; width: 0; z-index: 1; bottom: -15px; left: 129px; } .hidden { display: none; } .visible { display: block; } ')
     if isLabelChecked:
@@ -239,7 +240,8 @@ class ImageMapPlugin:
             progressValue = progressValue+1
             self.imageMapPluginGui.setProgressBarValue(progressValue)
     html.append(u'</map>')
-    # Write necessary JavaScript content:
+    # Write necessary JavaScript content: 
+    # If only one checkbox is checked, the required code for that feature (label/info box) alone is written.
     html.append(u'<script type="text/javascript">\n')
     html.append(u'(function() { "use strict"; var mapContainer = document.getElementById("map-container"); var offsetTop = mapContainer.offsetTop; var offsetLeft = mapContainer.offsetLeft; var areas = document.querySelectorAll("area"); for (var i = 0; i < areas.length; i++) { var img = new Image(); var centroid = getAreaCenter(areas[i].getAttribute("coords")); img.id = i.toString(); img.src = "'+ iconName +'"; img.className = "hidden"; document.getElementById("container").appendChild(img); img.style.left = centroid[0] + "px"; img.style.top = centroid[1] + "px"; img.onload = function() { offsetTop = mapContainer.offsetTop; offsetLeft = mapContainer.offsetLeft; this.style.left = parseInt(this.style.left, 10) - this.width / 2 + "px"; this.style.top = parseInt(this.style.top, 10) - this.height / 2 + "px"; this.className = "icons"; ')
     if isInfoChecked and not isLabelChecked:
@@ -354,22 +356,14 @@ class ImageMapPlugin:
   
   def setDimensions(self, dimensionsQString):
     self.dimensions = dimensionsQString
-    
-  def onHrefAttributeFieldSet(self, attributeFieldQstring):
-    self.hrefAttributeField = attributeFieldQstring
-    self.hrefAttributeIndex = self.provider.fieldNameIndex(attributeFieldQstring)
 
-  def onClickAttributeFieldSet(self, attributeFieldQstring):
-    self.onClickAttributeField = attributeFieldQstring
-    self.onClickAttributeIndex = self.provider.fieldNameIndex(attributeFieldQstring)
+  def labelAttributeFieldSet(self, attributeFieldQstring):
+    self.labelAttributeField = attributeFieldQstring
+    self.labelAttributeIndex = self.provider.fieldNameIndex(attributeFieldQstring)
 
-  def onMouseOverAttributeFieldSet(self, attributeFieldQstring):
-    self.onMouseOverAttributeField = attributeFieldQstring
-    self.onMouseOverAttributeIndex = self.provider.fieldNameIndex(attributeFieldQstring)
-
-  def onMouseOutAttributeFieldSet(self, attributeFieldQstring):
-    self.onMouseOutAttributeField = attributeFieldQstring
-    self.onMouseOutAttributeIndex = self.provider.fieldNameIndex(attributeFieldQstring)
+  def infoBoxAttributeFieldSet(self, attributeFieldQstring):
+    self.infoBoxAttributeField = attributeFieldQstring
+    self.infoBoxAttributeIndex = self.provider.fieldNameIndex(attributeFieldQstring)
 
   def setSelectedOnly(self, selectedOnlyBool):
     #print "selectedFeaturesOnly: %s" % selectedOnlyBool
@@ -460,17 +454,17 @@ class ImageMapPlugin:
         # QGIS > 2.0
         attrs = feature
     # escape ' and " because they will collapse as javascript parameter
-    if self.imageMapPluginGui.isOnClickChecked():
+    if self.imageMapPluginGui.isLabelChecked():
         # A negative index in this context means the field in question is a virtual one
-        if self.onClickAttributeIndex < 0:
+        if self.labelAttributeIndex < 0:
             # This is a workaround, since the data provider cannot find the virtual fields
-            self.onClickAttributeIndex = self.attrFields.index(str(self.onClickAttributeField))
-        param = unicode(attrs[self.onClickAttributeIndex])
+            self.labelAttributeIndex = self.attrFields.index(str(self.labelAttributeField))
+        param = unicode(attrs[self.labelAttributeIndex])
         self.labels.append(self.escapeNewLine(param))
-    if self.imageMapPluginGui.isOnMouseOverChecked():
-        if self.onMouseOverAttributeIndex < 0:
-            self.onMouseOverAttributeIndex = self.attrFields.index(str(self.onMouseOverAttributeField))
-        param = unicode(attrs[self.onMouseOverAttributeIndex])
+    if self.imageMapPluginGui.isInfoBoxChecked():
+        if self.infoBoxAttributeIndex < 0:
+            self.infoBoxAttributeIndex = self.attrFields.index(str(self.infoBoxAttributeField))
+        param = unicode(attrs[self.infoBoxAttributeIndex])
         self.infoBoxes.append(self.escapeNewLine(param))
     htm = htm + 'coords="'
     lastPixel=[0,0]
