@@ -14,12 +14,14 @@ import imagemapplugin_rc
 
 class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
 
-  PATH_STRING = "Path and file name (no extension)"
+  PATH_STRING = "Path and filename (no extension)"
   MSG_BOX_TITLE = "QGIS HTML Image Map Creator"
 
   def __init__(self, parent, fl):
     QDialog.__init__(self, parent, fl)
     self.setupUi(self)
+    self.currentFileName = ""
+    self.currentIconName = ""
 
 
   def on_buttonBox_accepted(self):
@@ -43,7 +45,7 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
 
   def on_chkBoxOnClick_stateChanged(self):
     self.cmbAttributesOnClick.setEnabled(self.chkBoxOnClick.isChecked())
-
+    
   def on_chkBoxOnMouseOver_stateChanged(self):
     self.cmbAttributesOnMouseOver.setEnabled(self.chkBoxOnMouseOver.isChecked())
   
@@ -56,13 +58,26 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
   # without this magic, the on_btnOk_clicked will be called two times: one clicked() and one clicked(bool checked)
   @pyqtSignature("on_btnBrowse_clicked()")
   def on_btnBrowse_clicked(self):
-    fileName = QFileDialog.getSaveFileName(self, self.PATH_STRING, "/", "")
-    self.txtFileName.setText(fileName)
+    if self.txtFileName.text() <> "":
+        self.currentFileName = self.txtFileName.text()
+    empty = self.currentFileName == ""
+    saveFileName = QFileDialog.getSaveFileName(self, self.PATH_STRING, os.path.dirname(self.currentFileName) if not empty else "/", "")
+    self.currentFileName = saveFileName if saveFileName <> "" else self.currentFileName
+    if self.currentFileName <> "":
+        self.txtFileName.setText(self.currentFileName)
 
   @pyqtSignature("on_btnIconFileBrowse_clicked()")  
   def on_btnIconFileBrowse_clicked(self):
-    fileName = QFileDialog.getSaveFileName(self, "Marker symbol", QgsApplication.svgPaths()[0], filter="*.svg;*.png;*.jpg", options=QFileDialog.DontConfirmOverwrite)
-    self.txtIconFileName.setText(fileName)
+    if self.txtIconFileName.text() <> "":
+        self.currentIconName = self.txtIconFileName.text()
+    empty = self.currentIconName == ""
+    svgPath = "/"
+    if QgsApplication.svgPaths()[0]:
+        svgPath = QgsApplication.svgPaths()[0]
+    saveIconName = QFileDialog.getSaveFileName(self, "Marker symbol", os.path.dirname(self.currentIconName) if not empty else svgPath, filter="*.svg;*.png;*.jpg", options=QFileDialog.DontConfirmOverwrite)
+    self.currentIconName = saveIconName if saveIconName <> "" else self.currentIconName
+    if self.currentIconName <> "":
+        self.txtIconFileName.setText(self.currentIconName)
     
   def setFilesPath(self, path):
     self.txtFileName.setText(path)

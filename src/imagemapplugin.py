@@ -41,11 +41,11 @@ class ImageMapPlugin:
   def __init__(self, iface):
     # Save reference to the QGIS interface and initialize instance variables
     self.iface = iface
-    self.filesPath = "/tmp/foo"
+    self.filesPath = ""
     self.attrFields = []
     self.layerName = ""
     self.dimensions = ""
-    self.iconFilePath = "/foo/bar.svg"
+    self.iconFilePath = ""
     self.labels = []
     self.infoBoxes = []
     self.index = 0
@@ -53,7 +53,7 @@ class ImageMapPlugin:
 
   def initGui(self):
     # Create action that will start plugin configuration
-    self.action = QAction(QIcon(":/imagemapicon.xpm"), "Create HTML image map...", self.iface.mainWindow())
+    self.action = QAction(QIcon(":/imagemapicon.xpm"), "create...", self.iface.mainWindow())
     self.action.setWhatsThis("Configuration for Image Map Creator")
     QObject.connect(self.action, SIGNAL("triggered()"), self.run)
     # Add toolbar button and menu item
@@ -115,7 +115,7 @@ class ImageMapPlugin:
     self.imageMapPluginGui.setAttributeFields(self.attrFields)
     self.imageMapPluginGui.setMapCanvasSize(self.iface.mapCanvas().width(), self.iface.mapCanvas().height())
     self.layerAttr = self.attrFields
-    self.selectedFeaturesOnly = False # default all features in current Extent
+    self.selectedFeaturesOnly = False # default all features in current extent
     # catch SIGNAL's
     QObject.connect(self.imageMapPluginGui, SIGNAL("getFilesPath(QString)"), self.setFilesPath)
     QObject.connect(self.imageMapPluginGui, SIGNAL("getLayerName(QString)"), self.setLayerName)
@@ -134,12 +134,14 @@ class ImageMapPlugin:
     self.imageMapPluginGui.setIconFilePath(self.iconFilePath)
     # Set active layer name and expected image dimensions
     self.imageMapPluginGui.setLayerName(self.iface.activeLayer().name())
-    self.imageMapPluginGui.setDimensions("~ " + str(self.iface.mapCanvas().width()) + " x " + str(self.iface.mapCanvas().height()))
+    self.imageMapPluginGui.setDimensions("~ Width: <b>" + str(self.iface.mapCanvas().width()) + "</b> pixels | Height: <b>" + str(self.iface.mapCanvas().height()) + "</b> pixels")
     # Set number of selected features
     msg = ""
     featureCount = self.iface.activeLayer().selectedFeatureCount()
     if featureCount > 0:
-        msg = " (selected feat. may be outside of extent)"
+        msg = " (feature(s) may be outside of view)"
+    else:
+        self.imageMapPluginGui.chkBoxSelectedOnly.setEnabled(False)
     self.imageMapPluginGui.setFeatureCount(str(featureCount) + msg)
     self.imageMapPluginGui.show()
 
@@ -157,18 +159,18 @@ class ImageMapPlugin:
     html = [u'<!DOCTYPE HTML><html>']
     isLabelChecked = self.imageMapPluginGui.isOnClickChecked()
     isInfoChecked = self.imageMapPluginGui.isOnMouseOverChecked()
-    html.append(u'<head><title>QGIS</title></head><body>')
+    html.append(u'<head><title>'+ self.iface.activeLayer().name() +'</title></head><body>')
     if isInfoChecked:
         html.append(u'<div id="info-box" class="hidden"></div>')
     if isLabelChecked:
         html.append(u'<div class="title-box"></div>')
     # Write necessary CSS content:
     html.append(u'<style type="text/css">')
-    html.append(u'#map-container { width: auto; height: auto; z-index: 0; position: relative; } .icons { z-index: 10; position: absolute; } body { font-family: Arial, Helvetica, sans-serif; } ')
+    html.append(u'#map-container { width: auto; height: auto; z-index: 0; position: relative; } .icons { z-index: 10; position: absolute; cursor: pointer; cursor: hand; } body { font-family: Arial, Helvetica, sans-serif; } ')
     if isInfoChecked:
         html.append(u'#info-box { position: absolute; visibility: visible; z-index: 50; background-color: #FFFFFF; width: 250px; height: 114px; padding: 10px; margin: 0; border-radius: 10px; box-shadow: 4px 4px 2px 0 rgba(0, 0, 0, 0.75); font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 130%; color: #5F5F5F; } #info-box:after { content: ""; position: absolute; border-style: solid; border-width: 15px 15px 0; border-color: #FFFFFF transparent; display: block; width: 0; z-index: 1; bottom: -15px; left: 129px; } .hidden { display: none; } .visible { display: block; } ')
     if isLabelChecked:
-        html.append(u'.title-box { position: absolute; z-index: 15; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: black; text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white; white-space: nowrap; }')
+        html.append(u'.title-box { position: absolute; z-index: 15; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: black; text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white; white-space: nowrap; } .hidden { display: none; }')
     html.append(u'</style>')
     html.append(u'<div id="mousemovemessage"></div><br>')
     html.append(u'<div id="container"></div><img id="map-container" src="'+ imgfilename +'" border="0" ismap="ismap" usemap="#mapmap" alt="html imagemap created with QGIS" >\n')
@@ -240,6 +242,8 @@ class ImageMapPlugin:
     # Write necessary JavaScript content:
     html.append(u'<script type="text/javascript">\n')
     html.append(u'(function() { "use strict"; var mapContainer = document.getElementById("map-container"); var offsetTop = mapContainer.offsetTop; var offsetLeft = mapContainer.offsetLeft; var areas = document.querySelectorAll("area"); for (var i = 0; i < areas.length; i++) { var img = new Image(); var centroid = getAreaCenter(areas[i].getAttribute("coords")); img.id = i.toString(); img.src = "'+ iconName +'"; img.className = "hidden"; document.getElementById("container").appendChild(img); img.style.left = centroid[0] + "px"; img.style.top = centroid[1] + "px"; img.onload = function() { offsetTop = mapContainer.offsetTop; offsetLeft = mapContainer.offsetLeft; this.style.left = parseInt(this.style.left, 10) - this.width / 2 + "px"; this.style.top = parseInt(this.style.top, 10) - this.height / 2 + "px"; this.className = "icons"; ')
+    if isInfoChecked and not isLabelChecked:
+        html.append(u'this.style.top = parseInt(this.style.top, 10) + offsetTop + "px"; this.style.left = parseInt(this.style.left, 10) + offsetLeft + "px";')
     if isLabelChecked:
         html.append(u'var boundingBox = this.getBoundingClientRect(); this.style.top = parseInt(this.style.top, 10) + offsetTop + "px"; this.style.left = parseInt(this.style.left, 10) + offsetLeft + "px"; var centerX = boundingBox.width / 2 + boundingBox.left + document.body.scrollLeft; var centerY = boundingBox.height + boundingBox.top + document.body.scrollTop; displayElementText(centerX, centerY, Number(this.id));')
     html.append(u' } } ')
@@ -250,7 +254,7 @@ class ImageMapPlugin:
     if isLabelChecked:
         html.append(u'function displayElementText(centerX, centerY, id) { var titleBoxContainer = document.getElementsByClassName("title-box")[0]; var titleBox = document.createElement("title-box"); titleBox.className = "title-box"; titleBox.innerHTML = labels[id]; titleBoxContainer.appendChild(titleBox); var titleWidthToCenter = titleBox.offsetWidth / 2; var titleHeightToCenter = titleBox.offsetHeight; titleBox.style.left = (centerX - titleWidthToCenter - offsetLeft) + "px"; titleBox.style.top = (centerY + titleHeightToCenter + 5) + "px"; } ')
     html.append(u'function getAreaCenter(coords) { var coordsArray = coords.split(","), center = []; var coord, maxX, maxY, minX = maxX = parseInt(coordsArray[0], 10), minY = maxY = parseInt(coordsArray[1], 10); for (var i = 0; i < coordsArray.length; i++) { coord = parseInt(coordsArray[i], 10); if (i % 2 === 0) { if (coord < minX) { minX = coord; } else if (coord > maxX) { maxX = coord; } } else { if (coord < minY) { minY = coord; } else if (coord > maxY) { maxY = coord; } } } center = [parseInt((minX + maxX) / 2, 10), parseInt((minY + maxY) / 2, 10)]; return center; } ')
-    # Dynamically write JavaScript array from field attribute array
+    # Dynamically write JavaScript array from field attribute arrays
     if len(self.labels) > 0:
         labelCounter = 0
         for l in self.labels:
@@ -431,7 +435,7 @@ class ImageMapPlugin:
         QMessageBox.information(self.iface.mainWindow(), self.MSG_BOX_TITLE, ( msg ), QMessageBox.Ok)
         self.imageMapPluginGui.hide()
     except IOError:
-        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No valid path or file name.\n" "Please enter or browse a valid file name."), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, ("No valid path or filename.\n" "Please enter or browse a valid file name."), QMessageBox.Ok, QMessageBox.Ok)
 
 
   # NOT WORKING ????

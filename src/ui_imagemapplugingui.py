@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'html_image_map_creator_dialog_base.ui'
 #
-# Created: Wed Jun 14 16:22:14 2017
+# Created: Tue Jun 20 09:17:59 2017
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_ImageMapPluginGui(object):
     def setupUi(self, ImageMapPluginGui):
         ImageMapPluginGui.setObjectName(_fromUtf8("ImageMapPluginGui"))
-        ImageMapPluginGui.resize(790, 513)
+        ImageMapPluginGui.resize(900, 513)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         ImageMapPluginGui.setWindowIcon(icon)
@@ -168,20 +168,18 @@ class Ui_ImageMapPluginGui(object):
 
     def retranslateUi(self, ImageMapPluginGui):
         ImageMapPluginGui.setWindowTitle(_translate("ImageMapPluginGui", "HTML Image Map Creator", None))
-        self.txtHeading.setText(_translate("ImageMapPluginGui", "HTML Image Map Creator", None))
         self.textEdit.setHtml(_translate("ImageMapPluginGui", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'Sans\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">This plugin will generate a HTML file along with a corresponding PNG file taken from the current map canvas extent. </span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">This plugin will create an HTML file along with a corresponding PNG file taken from the current map view. </span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:6pt;\"> </span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- It can be used for active (multi) polygon or point vector layers (e.g. Shapefiles or PostGIS layers).</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- The marker symbol of your choosing will be copied to the export directory.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- The HTML file will contain the &lt;img&gt; and image &lt;map&gt; source.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- Use \'Selected features only\' to generate &lt;area&gt; tags for selected features only.</span></p></body></html>", None))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- It can be used on any active point or (multi-)polygon vector layer (Geopackage, Shapefile etc.).</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- The marker symbol of your choosing will be copied over to the export directory.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">- The marker label and the body of the infobox will use the individual field attribute as their text and look like as shown in the picture on the left.</span></p></body></html>", None))
         self.lblDimensions.setText(_translate("ImageMapPluginGui", "Image dimensions", None))
         self.lblActiveLayer.setText(_translate("ImageMapPluginGui", "Active layer", None))
-        self.lblFilename.setText(_translate("ImageMapPluginGui", "Export file name", None))
+        self.lblFilename.setText(_translate("ImageMapPluginGui", "Export path and filename", None))
         self.btnBrowse.setText(_translate("ImageMapPluginGui", "Browse", None))
         self.lblIconFileName.setText(_translate("ImageMapPluginGui", "Marker symbol", None))
         self.btnIconFileBrowse.setText(_translate("ImageMapPluginGui", "Browse", None))
