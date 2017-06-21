@@ -167,7 +167,7 @@ class ImageMapPlugin:
     html.append(u'#map-container { width: auto; height: auto; z-index: 0; position: relative; } .icons { z-index: 10; position: absolute; ')
     if isInfoChecked:
         html.append(u'cursor: pointer; cursor: hand; ')
-    html.append(u'} body { font-family: Arial, Helvetica, sans-serif; } ')
+    html.append(u'} ')
     if isInfoChecked:
         html.append(u'#info-box { position: absolute; visibility: visible; z-index: 50; background-color: #FFFFFF; width: 250px; height: 114px; padding: 10px; margin: 0; border-radius: 10px; box-shadow: 4px 4px 2px 0 rgba(0, 0, 0, 0.75); font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 130%; color: #5F5F5F; } #info-box:after { content: ""; position: absolute; border-style: solid; border-width: 15px 15px 0; border-color: #FFFFFF transparent; display: block; width: 0; z-index: 1; bottom: -15px; left: 129px; } .visible { display: block; } ')
     if isLabelChecked:
