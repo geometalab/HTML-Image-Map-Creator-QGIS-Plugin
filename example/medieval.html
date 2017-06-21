@@ -102,8 +102,10 @@
                         var boundingBox = this.getBoundingClientRect();
                         this.style.top = parseInt(this.style.top, 10) + offsetTop + "px";
                         this.style.left = parseInt(this.style.left, 10) + offsetLeft + "px";
-                        var centerX = boundingBox.width / 2 + boundingBox.left + document.body.scrollLeft;
-                        var centerY = boundingBox.height + boundingBox.top + document.body.scrollTop;
+                        var left = (document.documentElement && document.documentElement.scrollLeft) || document.body.scrollLeft;
+                        var top = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
+                        var centerX = boundingBox.width / 2 + boundingBox.left + left;
+                        var centerY = boundingBox.height + boundingBox.top + top;
                         displayElementText(centerX, centerY, Number(this.id));
                     }
                 }

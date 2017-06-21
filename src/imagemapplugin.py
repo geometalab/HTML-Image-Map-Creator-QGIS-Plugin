@@ -248,7 +248,7 @@ class ImageMapPlugin:
     if isInfoChecked and not isLabelChecked:
         html.append(u'this.style.top = parseInt(this.style.top, 10) + offsetTop + "px"; this.style.left = parseInt(this.style.left, 10) + offsetLeft + "px";')
     if isLabelChecked:
-        html.append(u'var boundingBox = this.getBoundingClientRect(); this.style.top = parseInt(this.style.top, 10) + offsetTop + "px"; this.style.left = parseInt(this.style.left, 10) + offsetLeft + "px"; var centerX = boundingBox.width / 2 + boundingBox.left + document.body.scrollLeft; var centerY = boundingBox.height + boundingBox.top + document.body.scrollTop; displayElementText(centerX, centerY, Number(this.id));')
+        html.append(u'var boundingBox = this.getBoundingClientRect(); this.style.top = parseInt(this.style.top, 10) + offsetTop + "px"; this.style.left = parseInt(this.style.left, 10) + offsetLeft + "px"; var left = (document.documentElement && document.documentElement.scrollLeft) || document.body.scrollLeft; var top = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop; var centerX = boundingBox.width / 2 + boundingBox.left + left; var centerY = boundingBox.height + boundingBox.top + top; displayElementText(centerX, centerY, Number(this.id));')
     html.append(u' } } ')
     if isInfoChecked:
         html.append(u'document.addEventListener("click", function(e) { if (e.target.className === "icons") { var boundingBox = e.target.getBoundingClientRect(); var centerX = boundingBox.width / 2 + boundingBox.left; var centerY = boundingBox.top + boundingBox.height / 2; document.getElementById("info-box").className = "visible"; displayBox(centerX, centerY, Number(e.target.id)); } else { hideBox(); } }); ')
