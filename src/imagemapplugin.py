@@ -169,9 +169,10 @@ class ImageMapPlugin:
         html.append(u'cursor: pointer; cursor: hand; ')
     html.append(u'} body { font-family: Arial, Helvetica, sans-serif; } ')
     if isInfoChecked:
-        html.append(u'#info-box { position: absolute; visibility: visible; z-index: 50; background-color: #FFFFFF; width: 250px; height: 114px; padding: 10px; margin: 0; border-radius: 10px; box-shadow: 4px 4px 2px 0 rgba(0, 0, 0, 0.75); font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 130%; color: #5F5F5F; } #info-box:after { content: ""; position: absolute; border-style: solid; border-width: 15px 15px 0; border-color: #FFFFFF transparent; display: block; width: 0; z-index: 1; bottom: -15px; left: 129px; } .hidden { display: none; } .visible { display: block; } ')
+        html.append(u'#info-box { position: absolute; visibility: visible; z-index: 50; background-color: #FFFFFF; width: 250px; height: 114px; padding: 10px; margin: 0; border-radius: 10px; box-shadow: 4px 4px 2px 0 rgba(0, 0, 0, 0.75); font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 130%; color: #5F5F5F; } #info-box:after { content: ""; position: absolute; border-style: solid; border-width: 15px 15px 0; border-color: #FFFFFF transparent; display: block; width: 0; z-index: 1; bottom: -15px; left: 129px; } .visible { display: block; } ')
     if isLabelChecked:
-        html.append(u'.title-box { position: absolute; z-index: 15; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: black; text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white; white-space: nowrap; } .hidden { display: none; }')
+        html.append(u'.title-box { position: absolute; z-index: 15; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: black; text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white; white-space: nowrap; } ')
+    html.append(u'.hidden { display: none; }')
     html.append(u'</style>')
     html.append(u'<div id="mousemovemessage"></div><br>')
     html.append(u'<div id="container"></div><img id="map-container" src="'+ imgfilename +'" border="0" ismap="ismap" usemap="#mapmap" alt="html imagemap created with QGIS" >\n')
