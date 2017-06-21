@@ -174,7 +174,7 @@ class ImageMapPlugin:
         html.append(u'.title-box { position: absolute; z-index: 15; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: black; text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white; white-space: nowrap; } ')
     html.append(u'.hidden { display: none; }')
     html.append(u'</style>')
-    html.append(u'<div id="mousemovemessage"></div><br>')
+    html.append(u'<br>')
     html.append(u'<div id="container"></div><img id="map-container" src="'+ imgfilename +'" border="0" ismap="ismap" usemap="#mapmap" alt="html imagemap created with QGIS" >\n')
     html.append(u'<map name="mapmap">\n')
 
