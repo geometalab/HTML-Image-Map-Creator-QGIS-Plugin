@@ -212,12 +212,12 @@ class ImageMapPlugin:
         doCrsTransform = False
         # In case of 'on the fly projection'.
         # Different srs's for mapCanvas/project and layer we have to reproject stuff
-        if hasattr(self.iface.mapCanvas().mapRenderer(), 'destinationSrs'):
+        if hasattr(self.iface.mapCanvas().mapSettings(), 'destinationSrs'):
             # QGIS < 2.0
-            destinationCrs = self.iface.mapCanvas().mapRenderer().destinationSrs()
+            destinationCrs = self.iface.mapCanvas().mapSettings().destinationSrs()
             layerCrs = self.iface.activeLayer().srs()
         else:
-            destinationCrs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+            destinationCrs = self.iface.mapCanvas().mapSettings().destinationCrs()
             layerCrs = self.iface.activeLayer().crs()
         if not destinationCrs == layerCrs:
             # We have to transform the mapCanvasExtent to the data/layer Crs to be able
