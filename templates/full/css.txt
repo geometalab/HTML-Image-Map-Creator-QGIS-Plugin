@@ -1,3 +1,6 @@
+#container {
+    position: relative;
+}
 #map-container {
     z-index: 0;
     position: relative;
@@ -41,6 +44,7 @@
 }
 .title-box {
     position: absolute;
+    display: block;
     z-index: 15;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;

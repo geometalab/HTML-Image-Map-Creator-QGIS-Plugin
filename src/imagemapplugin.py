@@ -40,6 +40,12 @@ VALID_GEOMETRY_TYPES = {
     QGis.WKBMultiPolygon,
     QGis.WKBPoint
 }
+PLUGIN_PATH = os.path.dirname(__file__)
+# Template directories
+FULL_TEMPLATE_DIR = "{}/templates/full".format(PLUGIN_PATH)
+LABEL_TEMPLATE_DIR = "{}/templates/label".format(PLUGIN_PATH)
+INFO_TEMPLATE_DIR = "{}/templates/info_box".format(PLUGIN_PATH)
+
 
 class ImageMapPlugin:
 
@@ -173,11 +179,6 @@ class ImageMapPlugin:
         # Copy marker symbol to export directory if it is located elsewhere
         if src != dst:
             copyfile(src, dst)
-        plugin_path = os.path.dirname(__file__)
-        # Template directories
-        full_template_dir = "{}/templates/full".format(plugin_path)
-        label_template_dir = "{}/templates/label".format(plugin_path)
-        info_template_dir = "{}/templates/info_box".format(plugin_path)
         # Create a holder for retrieving features from the provider
         feature = QgsFeature()
         temp = unicode(self.files_path+".png")
@@ -188,7 +189,7 @@ class ImageMapPlugin:
         onlyLabel = isLabelChecked and not isInfoChecked
         onlyInfo = isInfoChecked and not isLabelChecked
         html.append(u'<head><title>' + self.iface.activeLayer().name() +
-          '</title><meta charset="UTF-8"></head><body>')
+                    '</title><meta charset="UTF-8"></head><body>')
         html.append(u'\n<!-- BEGIN EXTRACTABLE CONTENT -->')
         if isInfoChecked:
             html.append(u'\n<div id="info-box" class="hidden"></div>')
@@ -198,11 +199,11 @@ class ImageMapPlugin:
         html.append(u'<style type="text/css">\n')
         filename = "css.txt"
         if onlyLabel:
-            html.append(self.writeContent(label_template_dir, filename))
+            html.append(self.writeContent(LABEL_TEMPLATE_DIR, filename))
         elif onlyInfo:
-            html.append(self.writeContent(info_template_dir, filename))
+            html.append(self.writeContent(INFO_TEMPLATE_DIR, filename))
         else:
-            html.append(self.writeContent(full_template_dir, filename))
+            html.append(self.writeContent(FULL_TEMPLATE_DIR, filename))
         html.append(u'<br>')
         html.append(u'<div id="container"></div><img id="map-container" src="' + imgfilename + '" ')
         html.append(u'border="0" ismap="ismap" usemap="#mapmap" alt="html imagemap created with QGIS" >\n')
@@ -269,11 +270,11 @@ class ImageMapPlugin:
         html.append(u'<script type="text/javascript">\n')
         filename = "js.txt"
         if onlyLabel:
-            html.append(self.writeContent(label_template_dir, filename).replace("{}", repr(str(iconName))))
+            html.append(self.writeContent(LABEL_TEMPLATE_DIR, filename).replace("{}", repr(str(iconName))))
         elif onlyInfo:
-            html.append(self.writeContent(info_template_dir, filename).replace("{}", repr(str(iconName))))
+            html.append(self.writeContent(INFO_TEMPLATE_DIR, filename).replace("{}", repr(str(iconName))))
         else:
-            html.append(self.writeContent(full_template_dir, filename).replace("{}", repr(str(iconName))))
+            html.append(self.writeContent(FULL_TEMPLATE_DIR, filename).replace("{}", repr(str(iconName))))
         # Dynamically write JavaScript array from field attribute arrays
         if self.labels:
             html.append(u'\nvar labels = ["' + '", "'.join(self.labels) + '"]; ')
@@ -303,11 +304,6 @@ class ImageMapPlugin:
         if self.selectedFeaturesOnly and feature.id() not in selectedFeaturesIds:
             return html
         geom = feature.geometry()
-        if hasattr(self.iface.activeLayer(), "srs"):
-            # QGIS < 2.0
-            layerCrs = self.iface.activeLayer().srs()
-        else:
-            layerCrs = self.iface.activeLayer().crs()
         if doCrsTransform:
             if hasattr(geom, "transform"):
                 geom.transform(self.crsTransform)
@@ -414,7 +410,7 @@ class ImageMapPlugin:
         imgfilename = unicode(self.files_path + ".png")
         if os.path.isfile(htmlfilename) or os.path.isfile(imgfilename):
             if QMessageBox.question(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "There is already a filename with this name.\n" "Continue?"), 
+              "There is already a filename with this name.\n" "Continue?"),
               QMessageBox.Cancel, QMessageBox.Ok) != QMessageBox.Ok:
                 return
         # Else: everthing ok: start writing img and html
@@ -446,7 +442,7 @@ class ImageMapPlugin:
     # <area data-info-id=x shape=polygon coords=519,-52,519,..,-52,519,-52 alt=...>
     def ring2html(self, feature, ring, extent, extentAsPoly):
         param = u''
-        htm = u'<area data-info-id="' + str(self.index) + '" shape="poly" '
+        htm = u'<area data-info-id="{}" shape="poly" '.format(self.index)
         self.index = self.index + 1
         if hasattr(feature, 'attributeMap'):
             attrs = feature.attributeMap()

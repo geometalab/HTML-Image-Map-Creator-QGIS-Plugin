@@ -1,94 +1,130 @@
 (function () {
         "use strict";
-        var mapContainer = document.getElementById("map-container");
-        var offsetTop = mapContainer.offsetTop;
-        var offsetLeft = mapContainer.offsetLeft;
-        var areas = document.querySelectorAll("area");
-        for (var i = 0; i < areas.length; i++) {
-            var img = new Image();
-            var centroid = getAreaCenter(areas[i].getAttribute("coords"));
-            img.id = i.toString();
-            img.src = {};
-            img.className = "hidden";
-            document.getElementById("container").appendChild(img);
-            img.style.left = centroid[0] + "px";
-            img.style.top = centroid[1] + "px";
-            img.onload = function () {
-                offsetTop = mapContainer.offsetTop;
-                offsetLeft = mapContainer.offsetLeft;
-                this.style.left = parseInt(this.style.left, 10) - this.width / 2 + "px";
-                this.style.top = parseInt(this.style.top, 10) - this.height / 2 + "px";
-                this.className = "icons";
-                var boundingBox = this.getBoundingClientRect();
-                this.style.top = parseInt(this.style.top, 10) + offsetTop + "px";
-                this.style.left = parseInt(this.style.left, 10) + offsetLeft + "px";
+
+        var utils = (function() {
+            var boundingPrefs = {CENTER: 0, BOTTOM_CENTER: 1};
+            
+            function displayElementText(centerX, centerY, id, left, top) {
+                var titleBoxContainer = document.getElementsByClassName("title-box")[0];
+                var titleBox = document.createElement("title-box");
+                titleBox.className = "title-box";
+                titleBox.innerHTML = labels[id];
+                titleBoxContainer.appendChild(titleBox);
+                styleElement(titleBox, (centerX - titleBox.offsetWidth / 2) - left, (centerY + titleBox.offsetHeight + 5) - top);
+            }
+
+            function getOffsets() {
+                var mapContainer = document.getElementById("map-container");
+                return {"top": mapContainer.offsetTop, "left": mapContainer.offsetLeft};
+            }
+            
+            function getScrollPos() {
                 var left = (document.documentElement && document.documentElement.scrollLeft) || document.body.scrollLeft;
                 var top = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
-                var centerX = boundingBox.width / 2 + boundingBox.left + left;
-                var centerY = boundingBox.height + boundingBox.top + top;
-                displayElementText(centerX, centerY, Number(this.id));
+                return {"leftScroll": left, "topScroll": top};
             }
-        }
-        document.addEventListener("click", function (e) {
-            if (e.target.className === "icons") {
-                var boundingBox = e.target.getBoundingClientRect();
-                var centerX = boundingBox.width / 2 + boundingBox.left;
-                var centerY = boundingBox.top + boundingBox.height / 2;
-                document.getElementById("info-box").className = "visible";
-                displayBox(centerX, centerY, Number(e.target.id));
-            } else {
-                hideBox();
+            
+            function styleElement(element, left, top) {
+                element.style.left = left + "px";
+                element.style.top = top + "px";
             }
-        });
-
-        function displayBox(centerX, centerY, id) {
-            var infoBox = document.getElementById("info-box");
-            var infoWidthToCenter = infoBox.offsetWidth / 2;
-            var infoHeight = infoBox.offsetHeight;
-            infoBox.innerHTML = infoBoxes[id];
-            var left = (document.documentElement && document.documentElement.scrollLeft) || document.body.scrollLeft;
-            var top = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
-            infoBox.style.left = (centerX - infoWidthToCenter - offsetLeft) + left + "px";
-            infoBox.style.top = (centerY - infoHeight - 15) + top + "px";
-        }
-
-        function hideBox() {
-            document.getElementById("info-box").className = "hidden";
-        }
-
-        function displayElementText(centerX, centerY, id) {
-            var titleBoxContainer = document.getElementsByClassName("title-box")[0];
-            var titleBox = document.createElement("title-box");
-            titleBox.className = "title-box";
-            titleBox.innerHTML = labels[id];
-            titleBoxContainer.appendChild(titleBox);
-            var titleWidthToCenter = titleBox.offsetWidth / 2;
-            var titleHeightToCenter = titleBox.offsetHeight;
-            titleBox.style.left = (centerX - titleWidthToCenter) + "px";
-            titleBox.style.top = (centerY + titleHeightToCenter + 5) + "px";
-        }
-
-        function getAreaCenter(coords) {
-            var coordsArray = coords.split(","),
-                center = [];
-            var coord, maxX, maxY, minX = maxX = parseInt(coordsArray[0], 10),
-                minY = maxY = parseInt(coordsArray[1], 10);
-            for (var i = 0; i < coordsArray.length; i++) {
-                coord = parseInt(coordsArray[i], 10);
-                if (i % 2 === 0) {
-                    if (coord < minX) {
-                        minX = coord;
-                    } else if (coord > maxX) {
-                        maxX = coord;
-                    }
+            
+            function styleIcon(img) {
+                var left = parseInt(img.style.left, 10) - img.width / 2;
+                var top = parseInt(img.style.top, 10) - img.height / 2;
+                styleElement(img, left, top);
+                img.className = "icons";
+            }
+            
+            function getBoundingCenter(element, pref) {
+                var boundingBox = element.getBoundingClientRect();
+                var scrollPos = getScrollPos();
+                var centerX = boundingBox.left + boundingBox.width / 2 + scrollPos["leftScroll"];
+                var centerY = boundingBox.top + scrollPos["topScroll"];
+                if (pref === boundingPrefs.CENTER) {
+                    centerY += boundingBox.height / 2;
                 } else {
-                    if (coord < minY) {
-                        minY = coord;
-                    } else if (coord > maxY) {
-                        maxY = coord;
+                    centerY += boundingBox.height;
+                }
+                return {"x": centerX, "y": centerY};
+            }
+            
+            function getAreaCenter(coords) {
+                var coordsArray = coords.split(","),
+                    center = [];
+                var coord, maxX, maxY, minX = maxX = parseInt(coordsArray[0], 10),
+                    minY = maxY = parseInt(coordsArray[1], 10);
+                for (var i = 0; i < coordsArray.length; i++) {
+                    coord = parseInt(coordsArray[i], 10);
+                    if (i % 2 === 0) {
+                        if (coord < minX) {
+                            minX = coord;
+                        } else if (coord > maxX) {
+                            maxX = coord;
+                        }
+                    } else {
+                        if (coord < minY) {
+                            minY = coord;
+                        } else if (coord > maxY) {
+                            maxY = coord;
+                        }
                     }
                 }
+                center = [parseInt((minX + maxX) / 2, 10), parseInt((minY + maxY) / 2, 10)];
+                return center;
             }
-            center = [parseInt((minX + maxX) / 2, 10), parseInt((minY + maxY) / 2, 10)];
-            return center;
-        }
+  
+            return {boundingPrefs: boundingPrefs,
+                    displayElementText: displayElementText,
+                    getAreaCenter: getAreaCenter,
+                    getOffsets: getOffsets,
+                    styleIcon: styleIcon,
+                    getBoundingCenter: getBoundingCenter,
+                    styleElement: styleElement};
+        })();
+        
+        var box = (function() {
+        
+            function displayBox(centerX, centerY, id, offsetLeft) {
+                var infoBox = document.getElementById("info-box");
+                infoBox.innerHTML = infoBoxes[id];
+                utils.styleElement(infoBox, centerX - infoBox.offsetWidth / 2 - offsetLeft, centerY - infoBox.offsetHeight - 15);
+            }
+
+            function hideBox() {
+                document.getElementById("info-box").className = "hidden";
+            }
+            
+            return {display: displayBox, hide: hideBox};
+        })();
+
+        var controller = (function() {
+        
+            var areas = document.querySelectorAll("area");
+            for (var i = 0; i < areas.length; i++) {
+                var img = new Image();
+                var centroid = utils.getAreaCenter(areas[i].getAttribute("coords"));
+                img.id = i.toString();
+                img.src = {};
+                img.className = "hidden";
+                document.getElementById("container").appendChild(img);
+                utils.styleElement(img, centroid[0], centroid[1])
+                img.onload = function () {
+                    utils.styleIcon(this);
+                    var pos = utils.getBoundingCenter(this, utils.boundingPrefs.BOTTOM_CENTER);
+                    var offsets = utils.getOffsets();
+                    utils.displayElementText(pos["x"], pos["y"], Number(this.id), offsets["left"], offsets["top"]);
+                }
+            }
+            document.addEventListener("click", function (e) {
+                if (e.target.className === "icons") {
+                    var pos = utils.getBoundingCenter(e.target, utils.boundingPrefs.CENTER);
+                    document.getElementById("info-box").className = "visible";
+                    box.display(pos["x"], pos["y"], Number(e.target.id), utils.getOffsets()["left"]);
+                } else {
+                    box.hide();
+                }
+            });
+            
+            return { };
+        })();

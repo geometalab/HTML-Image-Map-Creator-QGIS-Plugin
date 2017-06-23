@@ -83,7 +83,7 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
         default_path = os.path.dirname(self.current_icon_name) if self.current_icon_name else svgPath
         saveIconName = QFileDialog.getSaveFileName(self, "Marker symbol",
             default_path, filter="*.svg;*.png;*.jpg", options=QFileDialog.DontConfirmOverwrite)
-        # If user clicks 'cancel' or enters empty string, the current icon directory is not overwritten
+        # If user clicks 'cancel', the current icon directory is not overwritten
         if saveIconName:
             self.current_icon_name = saveIconName
         # If current icon name is not empty, it is written into the line edit field
