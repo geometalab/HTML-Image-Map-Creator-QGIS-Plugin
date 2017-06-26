@@ -66,7 +66,7 @@ class ImageMapPlugin:
 
     def initGui(self):
         # Create action that will start plugin configuration
-        self.action = QAction(QIcon(":/imagemapicon.xpm"), "create...", self.iface.mainWindow())
+        self.action = QAction(QIcon(":/imagemapicon.xpm"), "Create map...", self.iface.mainWindow())
         self.action.setWhatsThis("Configuration for Image Map Creator")
         QObject.connect(self.action, SIGNAL("triggered()"), self.run)
         # Add toolbar button and menu item
