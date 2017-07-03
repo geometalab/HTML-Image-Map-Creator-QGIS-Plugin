@@ -5,7 +5,8 @@ name:Html Image Map Creator
 author:Emil Sivro, Severin Fritschi
 qgisMinimumVersion:2.0
 description:This plugin creates a static image map (HTML5/CSS/JavaScript) with interactive markers
-version:1.0
+version:0.1
+experimental=True
 
 ; end of mandatory metadata
 

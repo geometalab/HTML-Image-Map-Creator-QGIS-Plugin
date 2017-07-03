@@ -1,13 +1,7 @@
-#container {
-    position: relative;
-}
+
 #map-container {
     z-index: 0;
     position: relative;
-}
-.icons {
-    z-index: 10;
-    position: absolute;
 }
 .title-box {
     position: absolute;

@@ -1,17 +1,7 @@
-#container {
-    position: relative;
-}
 #map-container {
     z-index: 0;
     position: relative;
-}
-.icons {
-    z-index: 10;
-    position: absolute;
-    cursor: pointer;
-    cursor: hand;
-}
-#info-box {
+}#info-box {
     position: absolute;
     visibility: visible;
     z-index: 50;

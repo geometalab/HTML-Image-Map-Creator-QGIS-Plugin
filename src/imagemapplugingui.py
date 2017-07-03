@@ -2,6 +2,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import os.path
+from os.path import expanduser
 
 from qgis.core import QgsContextHelp
 from qgis.core import QgsApplication
@@ -9,6 +10,8 @@ from qgis.core import QgsApplication
 from ui_imagemapplugingui import Ui_ImageMapPluginGui
 
 import imagemapplugin_rc
+
+DEFAULT_PATH = os.path.dirname(__file__)
 
 
 class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
@@ -20,21 +23,23 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
         QDialog.__init__(self, parent, fl)
         self.setupUi(self)
         self.current_file_name = ""
-        self.current_icon_name = ""
 
     def on_buttonBox_accepted(self):
         # Make sure at least one checkbox is checked
-        if (not self.chkBoxLabel.isChecked()) and (not self.chkBoxInfoBox.isChecked()):
+        if not self.txtFileName.text():
+            QMessageBox.warning(self, self.MSG_BOX_TITLE, (
+              "Missing export path and filename.\n"
+              "Please enter a path ending with a filename."), QMessageBox.Ok)
+        elif (not self.chkBoxLabel.isChecked()) and (not self.chkBoxInfoBox.isChecked()):
             QMessageBox.warning(self, self.MSG_BOX_TITLE, (
               "Not a single option checked?\n"
-              "Please choose at least one attribute to use on marker symbols."), QMessageBox.Ok)
-            return
-        self.emit(SIGNAL("getFilesPath(QString)"), self.txtFileName.text())
-        self.emit(SIGNAL("getIconFilePath(QString)"), self.txtIconFileName.text())
-        self.emit(SIGNAL("labelAttributeSet(QString)"), self.cmbLabelAttributes.currentText())
-        self.emit(SIGNAL("infoBoxAttributeSet(QString)"), self.cmbInfoBoxAttributes.currentText())
-        # and GO
-        self.emit(SIGNAL("go(QString)"), "ok")
+              "Please choose at least one attribute to use on the marker symbols."), QMessageBox.Ok)
+        else:
+            self.emit(SIGNAL("getFilesPath(QString)"), self.txtFileName.text())
+            self.emit(SIGNAL("labelAttributeSet(QString)"), self.cmbLabelAttributes.currentText())
+            self.emit(SIGNAL("infoBoxAttributeSet(QString)"), self.cmbInfoBoxAttributes.currentText())
+            # and GO
+            self.emit(SIGNAL("go(QString)"), "ok")
 
     def on_buttonBox_rejected(self):
         self.done(0)
@@ -60,41 +65,19 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
         # Remember previously browsed directories
         if self.txtFileName.text():
             self.current_file_name = self.txtFileName.text()
-        # Set current default export directory to the recently browsed file directory
-        default_path = os.path.dirname(self.current_file_name) if self.current_file_name else "/"
+        # Set current default export directory to the recently browsed file directory,
+        # if it is empty, fall back to user home directory
+        default_path = os.path.dirname(self.current_file_name) if self.current_file_name else expanduser("~")
         saveFileName = QFileDialog.getSaveFileName(self, self.PATH_STRING, default_path, "")
-        # If user clicks 'cancel' or enters empty string, the current file name is not overwritten
+        # If user clicks 'cancel' the current file name is not overwritten
         if saveFileName:
             self.current_file_name = saveFileName
         # If current file name is not empty, it is written into the line edit field
         if self.current_file_name:
             self.txtFileName.setText(self.current_file_name)
 
-    @pyqtSignature("on_btnIconFileBrowse_clicked()")
-    def on_btnIconFileBrowse_clicked(self):
-        # Remember previously browsed directories
-        if self.txtIconFileName.text():
-            self.current_icon_name = self.txtIconFileName.text()
-        svgPath = "/"
-        # If there is a svg path at the index 0, use that as the initial default directory
-        if QgsApplication.svgPaths()[0]:
-            svgPath = QgsApplication.svgPaths()[0]
-        # After this, set current default icon directory to the recently browsed icon directory
-        default_path = os.path.dirname(self.current_icon_name) if self.current_icon_name else svgPath
-        saveIconName = QFileDialog.getSaveFileName(self, "Marker symbol",
-            default_path, filter="*.svg;*.png;*.jpg", options=QFileDialog.DontConfirmOverwrite)
-        # If user clicks 'cancel', the current icon directory is not overwritten
-        if saveIconName:
-            self.current_icon_name = saveIconName
-        # If current icon name is not empty, it is written into the line edit field
-        if self.current_icon_name:
-            self.txtIconFileName.setText(self.current_icon_name)
-
     def setFilesPath(self, path):
         self.txtFileName.setText(path)
-
-    def setIconFilePath(self, path):
-        self.txtIconFileName.setText(path)
 
     def setLayerName(self, name):
         self.txtLayerName.setText(name)

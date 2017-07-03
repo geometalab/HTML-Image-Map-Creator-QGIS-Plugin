@@ -22,6 +22,7 @@ email                : emil.sivro@hsr.ch | severin.fritschi@hsr.ch
 """
 import os
 
+from PyQt4 import QtGui
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
@@ -32,8 +33,6 @@ from imagemapplugingui import ImageMapPluginGui
 # Initialize Qt resources from file
 import imagemapplugin_rc
 import codecs
-
-from shutil import copyfile
 
 VALID_GEOMETRY_TYPES = {
     QGis.WKBPolygon,
@@ -58,7 +57,6 @@ class ImageMapPlugin:
         self.attr_fields = []
         self.layer_name = ""
         self.dimensions = ""
-        self.icon_file_path = ""
         self.labels = []
         self.info_boxes = []
         self.index = 0
@@ -144,7 +142,6 @@ class ImageMapPlugin:
             ("getFilesPath(QString)", self.setFilesPath),
             ("getLayerName(QString)", self.setLayerName),
             ("getDimensions(QString)", self.setDimensions),
-            ("getIconFilePath(QString)", self.setIconFilePath),
             ("labelAttributeSet(QString)", self.labelAttributeFieldSet),
             ("infoBoxAttributeSet(QString)", self.infoBoxAttributeFieldSet),
             ("getCbkBoxSelectedOnly(bool)", self.setSelectedOnly),
@@ -155,7 +152,6 @@ class ImageMapPlugin:
         for code, func in signals:
             QObject.connect(self.imageMapPluginGui, SIGNAL(code), func)
         self.imageMapPluginGui.setFilesPath(self.files_path)
-        self.imageMapPluginGui.setIconFilePath(self.icon_file_path)
         # Set active layer name and expected image dimensions
         self.imageMapPluginGui.setLayerName(self.iface.activeLayer().name())
         canvas_width = self.iface.mapCanvas().width()
@@ -163,22 +159,13 @@ class ImageMapPlugin:
         dimensions = "~ Width: <b>{}</b> pixels | Height: <b>{}</b> pixels".format(canvas_width, canvas_height)
         self.imageMapPluginGui.setDimensions(dimensions)
         # Set number of selected features
-        msg = ""
-        feature_count = self.iface.activeLayer().selectedFeatureCount()
-        if feature_count > 0:
-            msg = "(feature(s) may be outside of view)"
-        else:
+        selected_features = self.iface.activeLayer().selectedFeatureCount()
+        if selected_features == 0:
             self.imageMapPluginGui.chkBoxSelectedOnly.setEnabled(False)
-        self.imageMapPluginGui.setFeatureCount("{} {}".format(feature_count, msg))
+        self.imageMapPluginGui.setFeatureCount("{} selected of {} in map view".format(selected_features, self.nofFeaturesInExtent()))
         self.imageMapPluginGui.show()
 
     def writeHtml(self):
-        iconName = os.path.basename(os.path.normpath(self.icon_file_path))
-        src = self.icon_file_path
-        dst = os.path.dirname(self.files_path) + "/" + iconName
-        # Copy marker symbol to export directory if it is located elsewhere
-        if src != dst:
-            copyfile(src, dst)
         # Create a holder for retrieving features from the provider
         feature = QgsFeature()
         temp = unicode(self.files_path+".png")
@@ -205,33 +192,11 @@ class ImageMapPlugin:
         else:
             html.append(self.writeContent(FULL_TEMPLATE_DIR, filename))
         html.append(u'<br>')
-        html.append(u'<div id="container"></div><img id="map-container" src="' + imgfilename + '" ')
+        html.append(u'<img id="map-container" src="' + imgfilename + '" ')
         html.append(u'border="0" ismap="ismap" usemap="#mapmap" alt="html imagemap created with QGIS" >\n')
         html.append(u'<map name="mapmap">\n')
 
-        mapCanvasExtent = self.iface.mapCanvas().extent()
-        doCrsTransform = False
-        # In case of 'on the fly projection'.
-        # Different srs's for mapCanvas/project and layer we have to reproject stuff
-        if hasattr(self.iface.mapCanvas().mapSettings(), 'destinationSrs'):
-            # QGIS < 2.0
-            destinationCrs = self.iface.mapCanvas().mapSettings().destinationSrs()
-            layerCrs = self.iface.activeLayer().srs()
-        else:
-            destinationCrs = self.iface.mapCanvas().mapSettings().destinationCrs()
-            layerCrs = self.iface.activeLayer().crs()
-        if not destinationCrs == layerCrs:
-            # We have to transform the mapCanvasExtent to the data/layer Crs to be able
-            # to retrieve the features from the data provider,
-            # but ONLY if we are working with on the fly projection.
-            # (because in that case we just 'fly' to the raw coordinates from data)
-            if self.iface.mapCanvas().hasCrsTransformEnabled():
-                self.crsTransform = QgsCoordinateTransform(destinationCrs, layerCrs)
-                mapCanvasExtent = self.crsTransform.transformBoundingBox(mapCanvasExtent)
-                # We have to have a transformer to do the transformation of the geometries
-                # to the mapcanvas srs ourselves:
-                self.crsTransform = QgsCoordinateTransform(layerCrs, destinationCrs)
-                doCrsTransform = True
+        mapCanvasExtent = self.getTransformedMapCanvas()
         # Now iterate through each feature,
         # select features within current extent,
         # set max progress bar to number of features (not very accurate with a lot of huge multipolygons)
@@ -256,12 +221,13 @@ class ImageMapPlugin:
         if hasattr(self.provider, 'select'):
             self.provider.select(self.provider.attributeIndexes(), mapCanvasExtent, True, True)
             while self.provider.nextFeature(feature):
-                html.extend(self.handleGeom(feature, selectedFeaturesIds, doCrsTransform, bufferDistance))
+                # In case of points / lines we need to buffer geometries (plus/minus 20px areas)
+                html.extend(self.handleGeom(feature, selectedFeaturesIds, self.doCrsTransform, bufferDistance))
                 progressValue = progressValue+1
                 self.imageMapPluginGui.setProgressBarValue(progressValue)
         else:   # QGIS >= 2.0
             for feature in self.iface.activeLayer().getFeatures(request):
-                html.extend(self.handleGeom(feature, selectedFeaturesIds, doCrsTransform, bufferDistance))
+                html.extend(self.handleGeom(feature, selectedFeaturesIds, self.doCrsTransform, bufferDistance))
                 progressValue = progressValue + 1
                 self.imageMapPluginGui.setProgressBarValue(progressValue)
         html.append(u'</map>')
@@ -270,11 +236,11 @@ class ImageMapPlugin:
         html.append(u'<script type="text/javascript">\n')
         filename = "js.txt"
         if onlyLabel:
-            html.append(self.writeContent(LABEL_TEMPLATE_DIR, filename).replace("{}", repr(str(iconName))))
+            html.append(self.writeContent(LABEL_TEMPLATE_DIR, filename))
         elif onlyInfo:
-            html.append(self.writeContent(INFO_TEMPLATE_DIR, filename).replace("{}", repr(str(iconName))))
+            html.append(self.writeContent(INFO_TEMPLATE_DIR, filename))
         else:
-            html.append(self.writeContent(FULL_TEMPLATE_DIR, filename).replace("{}", repr(str(iconName))))
+            html.append(self.writeContent(FULL_TEMPLATE_DIR, filename))
         # Dynamically write JavaScript array from field attribute arrays
         if self.labels:
             html.append(u'\nvar labels = ["' + '", "'.join(self.labels) + '"]; ')
@@ -291,12 +257,12 @@ class ImageMapPlugin:
 
     # Returns a string representing the individual template's content
     def writeContent(self, dir, filename):
-        content = []
+        content = ""
         f = codecs.open("{}/{}".format(dir, filename), "r")
         for line in f:
-            content.append(line)
+            content += line
         f.close()
-        return "".join(content)
+        return content
 
     def handleGeom(self, feature, selectedFeaturesIds, doCrsTransform, bufferDistance):
         html = []
@@ -320,30 +286,22 @@ class ImageMapPlugin:
         projectExtent = self.iface.mapCanvas().extent()
         projectExtentAsPolygon = QgsGeometry()
         projectExtentAsPolygon = QgsGeometry.fromRect(projectExtent)
-        ringTuple = (
-            feature,
-            projectExtent,
-            projectExtentAsPolygon
-        )
         if geom.wkbType() == QGis.WKBPoint:  # 1 = WKBPoint
             # We make a copy of the geom, because apparently buffering the original will
             # only buffer the source-coordinates
             geomCopy = QgsGeometry.fromPoint(geom.asPoint())
             polygon = geomCopy.buffer(bufferDistance, 0).asPolygon()
-            html.append(self.polygon2html(ringTuple, polygon))
+            html.append(self.polygon2html(feature, projectExtent, projectExtentAsPolygon, polygon))
         if geom.wkbType() == QGis.WKBPolygon:  # 3 = WKBTYPE.WKBPolygon:
             polygon = geom.asPolygon()  # returns a list
-            html.append(self.polygon2html(ringTuple, polygon))
+            html.append(self.polygon2html(feature, projectExtent, projectExtentAsPolygon, polygon))
         if geom.wkbType() == QGis.WKBMultiPolygon:  # 6 = WKBTYPE.WKBMultiPolygon:
             multipolygon = geom.asMultiPolygon()  # returns a list
             for polygon in multipolygon:
-                html.append(self.polygon2html(ringTuple, polygon))
+                html.append(self.polygon2html(feature, projectExtent, projectExtentAsPolygon, polygon))
         return html
 
-    def polygon2html(self, ringTuple, polygon):
-        feature = ringTuple[0]
-        projectExtent = ringTuple[1]
-        projectExtentAsPolygon = ringTuple[2]
+    def polygon2html(self, feature, projectExtent, projectExtentAsPolygon, polygon):
         area_strings = [self.ring2html(feature, ring, projectExtent, projectExtentAsPolygon) for ring in polygon]
         return "".join(area_strings)
 
@@ -354,9 +312,6 @@ class ImageMapPlugin:
 
     def setFilesPath(self, filesPathQString):
         self.files_path = filesPathQString
-
-    def setIconFilePath(self, iconPathQString):
-        self.icon_file_path = iconPathQString
 
     def setLayerName(self, layerNameQString):
         self.layer_name = layerNameQString
@@ -429,8 +384,8 @@ class ImageMapPlugin:
             self.imageMapPluginGui.hide()
         except IOError:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "No valid path or filename.\n"
-              "Please enter or browse a valid file name."), QMessageBox.Ok, QMessageBox.Ok)
+              "Invalid path.\n"
+              "Path does either not exist or is not writable."), QMessageBox.Ok, QMessageBox.Ok)
 
     def world2pixel(self, x, y, mupp, minx, maxy):
         pixX = (x - minx)/mupp
@@ -492,6 +447,58 @@ class ImageMapPlugin:
             # Using last param as alt parameter (to be W3 compliant we need one)
             htm += '" alt="' + self.removeNewLine(param) + '">\n'
             return unicode(htm)
+
+    # Transforms the coordinates of the current map canvas extent, so that it can then be used
+    # for geometrical checks and as a filter
+    def getTransformedMapCanvas(self):
+        mapCanvasExtent = self.iface.mapCanvas().extent()
+        self.doCrsTransform = False
+        # In case of 'on the fly projection'.
+        # Different srs's for mapCanvas/project and layer we have to reproject stuff
+        if hasattr(self.iface.mapCanvas().mapSettings(), 'destinationSrs'):
+            # QGIS < 2.0
+            destinationCrs = self.iface.mapCanvas().mapSettings().destinationSrs()
+            layerCrs = self.iface.activeLayer().srs()
+        else:
+            destinationCrs = self.iface.mapCanvas().mapSettings().destinationCrs()
+            layerCrs = self.iface.activeLayer().crs()
+        if not destinationCrs == layerCrs:
+            # We have to transform the mapCanvasExtent to the data/layer Crs to be able
+            # to retrieve the features from the data provider,
+            # but ONLY if we are working with on the fly projection.
+            # (because in that case we just 'fly' to the raw coordinates from data)
+            if self.iface.mapCanvas().hasCrsTransformEnabled():
+                self.crsTransform = QgsCoordinateTransform(destinationCrs, layerCrs)
+                mapCanvasExtent = self.crsTransform.transformBoundingBox(mapCanvasExtent)
+                # We have to have a transformer to do the transformation of the geometries
+                # to the mapcanvas srs ourselves:
+                self.crsTransform = QgsCoordinateTransform(layerCrs, destinationCrs)
+                self.doCrsTransform = True
+        return mapCanvasExtent
+
+    # Returns a list of boundingBoxes representing the original geometry
+    def geom2rect(self, geom):
+        if geom.wkbType() == QGis.WKBPoint:  # 1 = WKBPoint
+            return [geom.boundingBox()]
+        if geom.wkbType() == QGis.WKBPolygon:  # 3 = WKBPolygon:
+            return [geom.boundingBox()]
+        if geom.wkbType() == QGis.WKBMultiPolygon:  # 6 = WKBMultiPolygon:
+            multipolygon = geom.asMultiPolygon()
+            return [geom.boundingBox() for polygon in multipolygon]
+
+    # Returns the number of features (points/polygons/multi-polygons) within
+    # the current map view
+    def nofFeaturesInExtent(self):
+        count = 0
+        mapCanvasExtent = self.getTransformedMapCanvas()
+        iter = self.iface.activeLayer().getFeatures()
+        for feature in iter:
+            geom = feature.geometry()
+            if not geom is None:
+                for rect in self.geom2rect(geom):
+                    if mapCanvasExtent.intersects(rect):
+                        count = count + 1
+        return count
 
     # Prevent new lines inside JavaScript array
     def removeNewLine(self, str):
