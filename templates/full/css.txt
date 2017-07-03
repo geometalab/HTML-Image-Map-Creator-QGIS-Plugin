@@ -1,8 +1,8 @@
-
 #map-container {
     z-index: 0;
     position: relative;
-}#info-box {
+}
+#info-box {
     position: absolute;
     visibility: visible;
     z-index: 50;

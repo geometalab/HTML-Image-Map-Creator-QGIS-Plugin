@@ -162,7 +162,7 @@ class ImageMapPlugin:
         selected_features = self.iface.activeLayer().selectedFeatureCount()
         if selected_features == 0:
             self.imageMapPluginGui.chkBoxSelectedOnly.setEnabled(False)
-        self.imageMapPluginGui.setFeatureCount("{} selected of {} in map view".format(selected_features, self.nofFeaturesInExtent()))
+        self.imageMapPluginGui.setFeatureCount("<b>{}</b> selected of <b>{}</b> in map view".format(selected_features, self.nofFeaturesInExtent()))
         self.imageMapPluginGui.show()
 
     def writeHtml(self):
