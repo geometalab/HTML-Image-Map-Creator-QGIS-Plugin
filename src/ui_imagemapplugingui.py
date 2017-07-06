@@ -214,4 +214,4 @@ class Ui_ImageMapPluginGui(object):
         self.lblLabelPixel.setText(_translate("ImageMapPluginGui", "pixels", None))
         self.lblInfoPixel.setText(_translate("ImageMapPluginGui", "pixels", None))
 
-import resources_rc
+import imagemapplugin_rc
