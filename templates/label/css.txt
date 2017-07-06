@@ -1,8 +1,8 @@
-#map-container {
+#himc-map-container {
     z-index: 0;
     position: relative;
 }
-.title-box {
+.himc-title-box {
     position: absolute;
     display: block;
     z-index: 15;
@@ -11,8 +11,5 @@
     color: black;
     text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
     white-space: nowrap;
-}
-.hidden {
-    display: none;
 }
 </style>

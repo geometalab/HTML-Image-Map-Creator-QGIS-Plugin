@@ -1,8 +1,8 @@
-#map-container {
+#himc-map-container {
     z-index: 0;
     position: relative;
 }
-#info-box {
+#himc-info-box {
     position: absolute;
     visibility: visible;
     z-index: 50;
@@ -18,7 +18,7 @@
     line-height: 130%;
     color: #5F5F5F;
 }
-#info-box:after {
+#himc-info-box:after {
     content: "";
     position: absolute;
     border-style: solid;
@@ -30,10 +30,10 @@
     bottom: -15px;
     left: 129px;
 }
-.visible {
+.himc-visible {
     display: block;
 }
-.title-box {
+.himc-title-box {
     position: absolute;
     display: block;
     z-index: 15;
@@ -43,7 +43,7 @@
     text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
     white-space: nowrap;
 }
-.hidden {
+.himc-hidden {
     display: none;
 }
 </style>

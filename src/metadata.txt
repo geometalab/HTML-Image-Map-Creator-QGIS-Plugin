@@ -1,10 +1,10 @@
-; the next section is mandatory
+;the next section is mandatory
 
 [general]
 name:Html Image Map Creator
 author:Emil Sivro, Severin Fritschi
 qgisMinimumVersion:2.0
-description:This plugin creates a static image map (HTML5/CSS/JavaScript) with interactive markers
+description:This plugin creates a static image map (HTML5/CSS/JavaScript) with interactive features
 version:0.1
 experimental=True
 
@@ -15,5 +15,3 @@ experimental=True
 homepage:https://giswiki.hsr.ch/HTML_Image_Map_Creator_QGIS_Plugin
 repository:https://github.com/geometalab/HTML-Image-Map-Creator-QGIS-Plugin
 tracker:https://github.com/geometalab/HTML-Image-Map-Creator-QGIS-Plugin/issues
-
-icon:icon.png

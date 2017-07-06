@@ -11,8 +11,6 @@ from ui_imagemapplugingui import Ui_ImageMapPluginGui
 
 import imagemapplugin_rc
 
-DEFAULT_PATH = os.path.dirname(__file__)
-
 
 class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
 
@@ -22,22 +20,29 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
     def __init__(self, parent, fl):
         QDialog.__init__(self, parent, fl)
         self.setupUi(self)
+        self.label_components = [self.cmbLabelAttributes, self.lblLabelOffset, self.spinBoxLabel, self.lblLabelPixel]
+        self.info_components = [self.cmbInfoBoxAttributes, self.lblInfoOffset, self.spinBoxInfo, self.lblInfoPixel]
         self.current_file_name = ""
 
     def on_buttonBox_accepted(self):
-        # Make sure at least one checkbox is checked
         if not self.txtFileName.text():
             QMessageBox.warning(self, self.MSG_BOX_TITLE, (
               "Missing export path and filename.\n"
               "Please enter a path ending with a filename."), QMessageBox.Ok)
+        # Make sure at least one checkbox is checked
         elif (not self.chkBoxLabel.isChecked()) and (not self.chkBoxInfoBox.isChecked()):
             QMessageBox.warning(self, self.MSG_BOX_TITLE, (
               "Not a single option checked?\n"
-              "Please choose at least one attribute to use on the marker symbols."), QMessageBox.Ok)
+              "Please choose at least one attribute to use on features."), QMessageBox.Ok)
         else:
             self.emit(SIGNAL("getFilesPath(QString)"), self.txtFileName.text())
             self.emit(SIGNAL("labelAttributeSet(QString)"), self.cmbLabelAttributes.currentText())
+            self.emit(SIGNAL("spinLabelSet(int)"), self.spinBoxLabel.value())
+            self.emit(SIGNAL("getCbkBoxLabel(bool)"), self.chkBoxLabel.isChecked())
             self.emit(SIGNAL("infoBoxAttributeSet(QString)"), self.cmbInfoBoxAttributes.currentText())
+            self.emit(SIGNAL("spinInfoSet(int)"), self.spinBoxInfo.value())
+            self.emit(SIGNAL("getCbkBoxInfo(bool)"), self.chkBoxInfoBox.isChecked())
+            self.emit(SIGNAL("getLayerName(QString)"), self.txtLayerName.text())
             # and GO
             self.emit(SIGNAL("go(QString)"), "ok")
 
@@ -48,10 +53,12 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
         self.emit(SIGNAL("getCbkBoxSelectedOnly(bool)"), self.chkBoxSelectedOnly.isChecked())
 
     def on_chkBoxLabel_stateChanged(self):
-        self.cmbLabelAttributes.setEnabled(self.chkBoxLabel.isChecked())
+        for label_comp in self.label_components:
+            label_comp.setEnabled(self.chkBoxLabel.isChecked())
 
     def on_chkBoxInfoBox_stateChanged(self):
-        self.cmbInfoBoxAttributes.setEnabled(self.chkBoxInfoBox.isChecked())
+        for info_comp in self.info_components:
+            info_comp.setEnabled(self.chkBoxInfoBox.isChecked())
 
     # If the text in this field still begins with: 'full path and name'
     def on_txtFileName_cursorPositionChanged(self, old, new):
@@ -66,21 +73,28 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
         if self.txtFileName.text():
             self.current_file_name = self.txtFileName.text()
         # Set current default export directory to the recently browsed file directory,
-        # if it is empty, fall back to user home directory
-        default_path = os.path.dirname(self.current_file_name) if self.current_file_name else expanduser("~")
+        # if it is empty or it does not exist, fall back to user home directory
+        current_path = os.path.dirname(self.current_file_name)
+        exists = os.path.exists(current_path)
+        default_path = current_path if exists and self.current_file_name else expanduser("~")
         saveFileName = QFileDialog.getSaveFileName(self, self.PATH_STRING, default_path, "")
         # If user clicks 'cancel' the current file name is not overwritten
         if saveFileName:
             self.current_file_name = saveFileName
         # If current file name is not empty, it is written into the line edit field
         if self.current_file_name:
-            self.txtFileName.setText(self.current_file_name)
+            dir = os.path.dirname(self.current_file_name)
+            filename = os.path.basename(self.current_file_name).rsplit(".", 1)[0]
+            self.txtFileName.setText("{}/{}".format(dir, filename))
 
     def setFilesPath(self, path):
         self.txtFileName.setText(path)
 
     def setLayerName(self, name):
         self.txtLayerName.setText(name)
+
+    def setFeatureTotal(self, total):
+        self.featureTotal.setText(total)
 
     def setDimensions(self, dimensions):
         self.txtDimensions.setText(dimensions)

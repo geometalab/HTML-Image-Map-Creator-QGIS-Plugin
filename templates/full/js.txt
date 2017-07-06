@@ -3,18 +3,20 @@
 
         var utils = (function() {
             var boundingPrefs = {CENTER: 0, BOTTOM_CENTER: 1};
+            var LABEL_OFFSET = {0};
+            var INFO_OFFSET = {1};
             
             function displayElementText(centerX, centerY, id) {
-                var titleBoxContainer = document.getElementsByClassName("title-box")[0];
-                var titleBox = document.createElement("title-box");
-                titleBox.className = "title-box";
+                var titleBoxContainer = document.getElementsByClassName("himc-title-box")[0];
+                var titleBox = document.createElement("himc-title-box");
+                titleBox.className = "himc-title-box";
                 titleBox.innerHTML = labels[id];
                 titleBoxContainer.appendChild(titleBox);
                 styleElement(titleBox, (centerX - titleBox.offsetWidth / 2), (centerY + titleBox.offsetHeight));
             }
 
             function getOffsets() {
-                var mapContainer = document.getElementById("map-container");
+                var mapContainer = document.getElementById("himc-map-container");
                 return {"top": mapContainer.offsetTop, "left": mapContainer.offsetLeft};
             }
             
@@ -27,9 +29,9 @@
                 var x = parseInt((minX + maxX) / 2, 10);
                 var y;
                 if (pref === boundingPrefs.CENTER) {
-                    y = parseInt((minY + maxY) / 2, 10);
+                    y = parseInt((minY + maxY) / 2, 10) + INFO_OFFSET;
                 } else {
-                    y = parseInt(maxY + 5, 10);
+                    y = parseInt(maxY, 10) + LABEL_OFFSET;
                 }
                 return [x, y];
             }
@@ -68,13 +70,13 @@
         var box = (function() {
         
             function displayBox(centerX, centerY, id) {
-                var infoBox = document.getElementById("info-box");
+                var infoBox = document.getElementById("himc-info-box");
                 infoBox.innerHTML = infoBoxes[id];
                 utils.styleElement(infoBox, centerX - infoBox.offsetWidth / 2, centerY - infoBox.offsetHeight - 15);
             }
 
             function hideBox() {
-                document.getElementById("info-box").className = "hidden";
+                document.getElementById("himc-info-box").className = "himc-hidden";
             }
             
             return {display: displayBox, hide: hideBox};
@@ -82,7 +84,7 @@
 
         var controller = (function() {
         
-            document.getElementById("map-container").onload = function () {
+            document.getElementById("himc-map-container").onload = function () {
                 var areas = document.querySelectorAll("area");
                 for (var i = 0; i < areas.length; i++) {
                     var centroid = utils.getAreaCenter(areas[i].getAttribute("coords"), utils.boundingPrefs.BOTTOM_CENTER);
@@ -93,7 +95,7 @@
             document.addEventListener("click", function (e) {
                 if (e.target.tagName === "AREA") {
                     var centroid = utils.getAreaCenter(e.target.getAttribute("coords"), utils.boundingPrefs.CENTER);
-                    document.getElementById("info-box").className = "visible";
+                    document.getElementById("himc-info-box").className = "himc-visible";
                     box.display(centroid[0], centroid[1] + utils.getOffsets().top, Number(e.target.getAttribute("data-info-id")));
                 } else {
                     box.hide();

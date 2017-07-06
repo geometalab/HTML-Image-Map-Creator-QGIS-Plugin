@@ -54,11 +54,18 @@ class ImageMapPlugin:
         # Save reference to the QGIS interface and initialize instance variables
         self.iface = iface
         self.files_path = ""
+        self.label_field_index = 0
+        self.info_field_index = 0
         self.attr_fields = []
+        self.feature_total = ""
         self.layer_name = ""
         self.dimensions = ""
         self.labels = []
+        self.label_offset = 0
+        self.label_checked = False
         self.info_boxes = []
+        self.info_offset = 0
+        self.info_checked = False
         self.index = 0
         self.feature_count = 0
 
@@ -136,14 +143,19 @@ class ImageMapPlugin:
             self.imageMapPluginGui = ImageMapPluginGui(self.iface.mainWindow(), flags)
         self.imageMapPluginGui.setAttributeFields(self.attr_fields)
         self.layerAttr = self.attr_fields
-        self.selectedFeaturesOnly = False  # default all features in current extent
+        self.selectedFeaturesOnly = False  # default: all features in current extent
         # Catch SIGNAL's
         signals = [
             ("getFilesPath(QString)", self.setFilesPath),
             ("getLayerName(QString)", self.setLayerName),
+            ("getFeatureTotal(QString)", self.setFeatureTotal),
             ("getDimensions(QString)", self.setDimensions),
             ("labelAttributeSet(QString)", self.labelAttributeFieldSet),
+            ("spinLabelSet(int)", self.setLabelOffset),
+            ("getCbkBoxLabel(bool)", self.setLabelChecked),
             ("infoBoxAttributeSet(QString)", self.infoBoxAttributeFieldSet),
+            ("spinInfoSet(int)", self.setInfoOffset),
+            ("getCbkBoxInfo(bool)", self.setInfoChecked),
             ("getCbkBoxSelectedOnly(bool)", self.setSelectedOnly),
             ("getSelectedFeatureCount(QString)", self.setFeatureCount),
             ("go(QString)", self.go),
@@ -151,50 +163,76 @@ class ImageMapPlugin:
         ]
         for code, func in signals:
             QObject.connect(self.imageMapPluginGui, SIGNAL(code), func)
-        self.imageMapPluginGui.setFilesPath(self.files_path)
+
+        self.reloadGuiStates()
         # Set active layer name and expected image dimensions
         self.imageMapPluginGui.setLayerName(self.iface.activeLayer().name())
+        self.imageMapPluginGui.setFeatureTotal("<b>{}</b> features total".format(self.iface.activeLayer().featureCount()))
         canvas_width = self.iface.mapCanvas().width()
         canvas_height = self.iface.mapCanvas().height()
-        dimensions = "~ Width: <b>{}</b> pixels | Height: <b>{}</b> pixels".format(canvas_width, canvas_height)
-        self.imageMapPluginGui.setDimensions(dimensions)
+        dimensions = "~ width: <b>{}</b> pixels, height: <b>{}</b> pixels"
+        self.imageMapPluginGui.setDimensions(dimensions.format(canvas_width, canvas_height))
         # Set number of selected features
         selected_features = self.iface.activeLayer().selectedFeatureCount()
-        if selected_features == 0:
+        selected_features_in_extent = self.nofSelectedFeaturesInExtent()
+        if selected_features == 0 or selected_features_in_extent == 0:
             self.imageMapPluginGui.chkBoxSelectedOnly.setEnabled(False)
-        self.imageMapPluginGui.setFeatureCount("<b>{}</b> selected of <b>{}</b> in map view".format(selected_features, self.nofFeaturesInExtent()))
+        select_msg = "<b>{}</b> selected, of which <b>{}</b> from map view will be exported"
+        self.imageMapPluginGui.setFeatureCount(select_msg.format(selected_features, selected_features_in_extent))
         self.imageMapPluginGui.show()
+
+    def reloadGuiStates(self):
+        self.imageMapPluginGui.setFilesPath(self.files_path)
+        # Only reload states if the plugin is used on the same layer as before:
+        if self.layer_name == self.iface.activeLayer().name():
+            # Reload selected features in combo-boxes:
+            if self.label_field_index < len(self.attr_fields):
+                index = self.handleFieldIndexes(self.label_field_index, self.labelAttributeField)
+                self.imageMapPluginGui.cmbLabelAttributes.setCurrentIndex(index)
+            if self.info_field_index < len(self.attr_fields):
+                index = self.handleFieldIndexes(self.info_field_index, self.infoBoxAttributeField)
+                self.imageMapPluginGui.cmbInfoBoxAttributes.setCurrentIndex(index)
+            # Reload spin-box values:
+            self.imageMapPluginGui.spinBoxLabel.setValue(self.label_offset)
+            self.imageMapPluginGui.spinBoxInfo.setValue(self.info_offset)
+            # Reload check-box states:
+            label_state = Qt.Checked if self.label_checked else Qt.Unchecked
+            info_state = Qt.Checked if self.info_checked else Qt.Unchecked
+            self.imageMapPluginGui.chkBoxLabel.setCheckState(label_state)
+            self.imageMapPluginGui.chkBoxInfoBox.setCheckState(info_state)
 
     def writeHtml(self):
         # Create a holder for retrieving features from the provider
         feature = QgsFeature()
         temp = unicode(self.files_path+".png")
         imgfilename = os.path.basename(temp)
-        html = [u'<!DOCTYPE HTML><html>']
+        html = [u'<!DOCTYPE HTML>\n<html>']
         isLabelChecked = self.imageMapPluginGui.isLabelChecked()
         isInfoChecked = self.imageMapPluginGui.isInfoBoxChecked()
         onlyLabel = isLabelChecked and not isInfoChecked
         onlyInfo = isInfoChecked and not isLabelChecked
-        html.append(u'<head><title>' + self.iface.activeLayer().name() +
-                    '</title><meta charset="UTF-8"></head><body>')
+        html.append(u'\n<head>\n<title>' + self.iface.activeLayer().name() +
+                    '</title>\n<meta charset="UTF-8">\n</head>\n<body>')
         html.append(u'\n<!-- BEGIN EXTRACTABLE CONTENT -->')
         if isInfoChecked:
-            html.append(u'\n<div id="info-box" class="hidden"></div>')
+            html.append(u'\n<div id="himc-info-box" class="himc-hidden"></div>')
         if isLabelChecked:
-            html.append(u'\n<div class="title-box"></div>')
+            html.append(u'\n<div class="himc-title-box"></div>')
         # Write necessary CSS content for corresponding features, namely "label" and "infoBox":
-        html.append(u'<style type="text/css">\n')
+        html.append(u'\n<style type="text/css">\n')
         filename = "css.txt"
+        # Empty list as replacement parameter, because there are no replacements to be made in
+        # CSS templates
         if onlyLabel:
-            html.append(self.writeContent(LABEL_TEMPLATE_DIR, filename))
+            html.append(self.writeContent(LABEL_TEMPLATE_DIR, filename, []))
         elif onlyInfo:
-            html.append(self.writeContent(INFO_TEMPLATE_DIR, filename))
+            html.append(self.writeContent(INFO_TEMPLATE_DIR, filename, []))
         else:
-            html.append(self.writeContent(FULL_TEMPLATE_DIR, filename))
-        html.append(u'<br>')
-        html.append(u'<img id="map-container" src="' + imgfilename + '" ')
-        html.append(u'border="0" ismap="ismap" usemap="#mapmap" alt="html imagemap created with QGIS" >\n')
-        html.append(u'<map name="mapmap">\n')
+            html.append(self.writeContent(FULL_TEMPLATE_DIR, filename, []))
+        html.append(u'\n<br>')
+        html.append(u'\n<img id="himc-map-container" src="' + imgfilename + '" ')
+        html.append(u'border="0" ismap="ismap" usemap="#mapmap" alt="html imagemap created with QGIS" >')
+        html.append(u'\n<map name="mapmap">\n')
 
         mapCanvasExtent = self.getTransformedMapCanvas()
         # Now iterate through each feature,
@@ -223,7 +261,7 @@ class ImageMapPlugin:
             while self.provider.nextFeature(feature):
                 # In case of points / lines we need to buffer geometries (plus/minus 20px areas)
                 html.extend(self.handleGeom(feature, selectedFeaturesIds, self.doCrsTransform, bufferDistance))
-                progressValue = progressValue+1
+                progressValue = progressValue + 1
                 self.imageMapPluginGui.setProgressBarValue(progressValue)
         else:   # QGIS >= 2.0
             for feature in self.iface.activeLayer().getFeatures(request):
@@ -233,35 +271,38 @@ class ImageMapPlugin:
         html.append(u'</map>')
         # Write necessary JavaScript content:
         # If only one checkbox is checked, the required code for that feature (label/info box) alone is written
-        html.append(u'<script type="text/javascript">\n')
+        html.append(u'\n<script type="text/javascript">\n')
         filename = "js.txt"
         if onlyLabel:
-            html.append(self.writeContent(LABEL_TEMPLATE_DIR, filename))
+            html.append(self.writeContent(LABEL_TEMPLATE_DIR, filename, [self.label_offset]))
         elif onlyInfo:
-            html.append(self.writeContent(INFO_TEMPLATE_DIR, filename))
+            html.append(self.writeContent(INFO_TEMPLATE_DIR, filename, [self.info_offset]))
         else:
-            html.append(self.writeContent(FULL_TEMPLATE_DIR, filename))
-        # Dynamically write JavaScript array from field attribute arrays
+            html.append(self.writeContent(FULL_TEMPLATE_DIR, filename, [self.label_offset, self.info_offset]))
+        # Dynamically write JavaScript array from field attribute list
         if self.labels:
             html.append(u'\nvar labels = ["' + '", "'.join(self.labels) + '"]; ')
         if self.info_boxes:
             html.append(u'\nvar infoBoxes = ["' + '", "'.join(self.info_boxes) + '"]; ')
-        # Clean up arrays afterwards
+        # Clean up list afterwards
         del self.labels[:]
         del self.info_boxes[:]
-        html.append(u'})();\n')
-        html.append(u'</script>')
+        html.append(u'})();')
+        html.append(u'\n</script>')
         html.append(u'\n<!-- END EXTRACTABLE CONTENT -->')
-        html.append(u'\n</body></html>')
+        html.append(u'\n</body>\n</html>')
         return html
 
-    # Returns a string representing the individual template's content
-    def writeContent(self, dir, filename):
+    # Returns a string representing the individual template's content and
+    # replaces offset-placeholders in the "js.txt" templates
+    def writeContent(self, dir, filename, offsets):
         content = ""
         f = codecs.open("{}/{}".format(dir, filename), "r")
         for line in f:
             content += line
         f.close()
+        for i, replacement in enumerate("{}".format(i) for i in offsets):
+            content = content.replace("{%s}" % i, replacement)
         return content
 
     def handleGeom(self, feature, selectedFeaturesIds, doCrsTransform, bufferDistance):
@@ -316,16 +357,31 @@ class ImageMapPlugin:
     def setLayerName(self, layerNameQString):
         self.layer_name = layerNameQString
 
+    def setFeatureTotal(self, totalQString):
+        self.feature_total = totalQString
+
     def setDimensions(self, dimensionsQString):
         self.dimensions = dimensionsQString
 
     def labelAttributeFieldSet(self, attributeFieldQstring):
         self.labelAttributeField = attributeFieldQstring
-        self.labelAttributeIndex = self.provider.fieldNameIndex(attributeFieldQstring)
+        self.label_field_index = self.provider.fieldNameIndex(attributeFieldQstring)
+
+    def setLabelOffset(self, offset):
+        self.label_offset = offset
+
+    def setLabelChecked(self, isChecked):
+        self.label_checked = isChecked
 
     def infoBoxAttributeFieldSet(self, attributeFieldQstring):
         self.infoBoxAttributeField = attributeFieldQstring
-        self.infoBoxAttributeIndex = self.provider.fieldNameIndex(attributeFieldQstring)
+        self.info_field_index = self.provider.fieldNameIndex(attributeFieldQstring)
+
+    def setInfoOffset(self, offset):
+        self.info_offset = offset
+
+    def setInfoChecked(self, isChecked):
+        self.info_checked = isChecked
 
     def setSelectedOnly(self, selectedOnlyBool):
         self.selectedFeaturesOnly = selectedOnlyBool
@@ -405,18 +461,14 @@ class ImageMapPlugin:
             # QGIS > 2.0
             attrs = feature
         # Escape ' and " because they will collapse as JavaScript parameter
-        if self.imageMapPluginGui.isLabelChecked():
-            # A negative index in this context means the field in question is a virtual one
-            if self.labelAttributeIndex < 0:
-                # This is a workaround, since the data provider cannot find the virtual fields
-                self.labelAttributeIndex = self.attr_fields.index(str(self.labelAttributeField))
-            param = unicode(attrs[self.labelAttributeIndex])
-            self.labels.append(self.removeNewLine(param))
         if self.imageMapPluginGui.isInfoBoxChecked():
-            if self.infoBoxAttributeIndex < 0:
-                self.infoBoxAttributeIndex = self.attr_fields.index(str(self.infoBoxAttributeField))
-            param = unicode(attrs[self.infoBoxAttributeIndex])
+            index = self.handleFieldIndexes(self.info_field_index, self.infoBoxAttributeField)
+            param = unicode(attrs[index])
             self.info_boxes.append(self.removeNewLine(param))
+        if self.imageMapPluginGui.isLabelChecked():
+            index = self.handleFieldIndexes(self.label_field_index, self.labelAttributeField)
+            param = unicode(attrs[index])
+            self.labels.append(self.removeNewLine(param))
         htm = htm + 'coords="'
         lastPixel = [0, 0]
         insideExtent = False
@@ -445,8 +497,17 @@ class ImageMapPlugin:
             return ''
         else:
             # Using last param as alt parameter (to be W3 compliant we need one)
-            htm += '" alt="' + self.removeNewLine(param) + '">\n'
+            alt = self.removeNewLine(param) if self.imageMapPluginGui.isLabelChecked() else "{}".format(self.index)
+            htm += '" alt="' + u''.join(alt) + '">\n'
             return unicode(htm)
+
+    # Returns the right index for virtual and non-virtual fields
+    def handleFieldIndexes(self, index, field):
+        # A negative index in this context means the field in question is a virtual one
+        if index < 0:
+            # This is a workaround, since the data provider cannot find virtual fields
+            index = self.attr_fields.index("{}".format(field))
+        return index
 
     # Transforms the coordinates of the current map canvas extent, so that it can then be used
     # for geometrical checks and as a filter
@@ -486,12 +547,12 @@ class ImageMapPlugin:
             multipolygon = geom.asMultiPolygon()
             return [geom.boundingBox() for polygon in multipolygon]
 
-    # Returns the number of features (points/polygons/multi-polygons) within
+    # Returns the number of *selected* features (points/polygons/multi-polygons) within
     # the current map view
-    def nofFeaturesInExtent(self):
+    def nofSelectedFeaturesInExtent(self):
         count = 0
         mapCanvasExtent = self.getTransformedMapCanvas()
-        iter = self.iface.activeLayer().getFeatures()
+        iter = self.iface.activeLayer().selectedFeatures()
         for feature in iter:
             geom = feature.geometry()
             if not geom is None:
