@@ -39,6 +39,7 @@
     z-index: 15;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;
+    font-weight: bold;
     color: black;
     text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
     white-space: nowrap;
