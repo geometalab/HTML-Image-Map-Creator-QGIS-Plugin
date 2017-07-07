@@ -125,17 +125,13 @@ class ImageMapPlugin:
 
         # We need the fields of the active layer to show in the attribute combobox in the gui:
         self.attr_fields = []
-        fields = self.provider.fields()
+        fields = self.iface.activeLayer().pendingFields()
         if hasattr(fields, 'iteritems'):
             for (i, field) in fields.iteritems():
                 self.attr_fields.append(field.name().trimmed())
         else:
-            for field in self.provider.fields():
+            for field in fields:
                 self.attr_fields.append(field.name().strip())
-        # Append virtual fields
-        for i in range(layer.fields().count()):
-            if layer.fields().fieldOrigin(i) == QgsFields.OriginExpression:
-                self.attr_fields.append(layer.fields()[i].name())
         # Construct gui (using these fields)
         flags = Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMaximizeButtonHint  # QgisGui.ModalDialogFlags
         # Construct gui: if available reuse this one
@@ -163,7 +159,6 @@ class ImageMapPlugin:
         ]
         for code, func in signals:
             QObject.connect(self.imageMapPluginGui, SIGNAL(code), func)
-
         # Reload states of GUI components from previous session
         self.reloadGuiStates()
         # Set active layer name and expected image dimensions
@@ -189,11 +184,9 @@ class ImageMapPlugin:
         if self.layer_name == self.iface.activeLayer().name():
             # Reload selected features in combo-boxes:
             if self.label_field_index < len(self.attr_fields):
-                index = self.handleFieldIndexes(self.label_field_index, self.labelAttributeField)
-                self.imageMapPluginGui.cmbLabelAttributes.setCurrentIndex(index)
+                self.imageMapPluginGui.cmbLabelAttributes.setCurrentIndex(self.label_field_index)
             if self.info_field_index < len(self.attr_fields):
-                index = self.handleFieldIndexes(self.info_field_index, self.infoBoxAttributeField)
-                self.imageMapPluginGui.cmbInfoBoxAttributes.setCurrentIndex(index)
+                self.imageMapPluginGui.cmbInfoBoxAttributes.setCurrentIndex(self.info_field_index)
             # Reload spin-box values:
             self.imageMapPluginGui.spinBoxLabel.setValue(self.label_offset)
             self.imageMapPluginGui.spinBoxInfo.setValue(self.info_offset)
@@ -367,7 +360,7 @@ class ImageMapPlugin:
 
     def labelAttributeFieldSet(self, attributeFieldQstring):
         self.labelAttributeField = attributeFieldQstring
-        self.label_field_index = self.provider.fieldNameIndex(attributeFieldQstring)
+        self.label_field_index = self.iface.activeLayer().fieldNameIndex(attributeFieldQstring)
 
     def setLabelOffset(self, offset):
         self.label_offset = offset
@@ -377,7 +370,7 @@ class ImageMapPlugin:
 
     def infoBoxAttributeFieldSet(self, attributeFieldQstring):
         self.infoBoxAttributeField = attributeFieldQstring
-        self.info_field_index = self.provider.fieldNameIndex(attributeFieldQstring)
+        self.info_field_index = self.iface.activeLayer().fieldNameIndex(attributeFieldQstring)
 
     def setInfoOffset(self, offset):
         self.info_offset = offset
@@ -424,7 +417,7 @@ class ImageMapPlugin:
         if os.path.isfile(htmlfilename) or os.path.isfile(imgfilename):
             if QMessageBox.question(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
               "There is already a filename with this name.\n" "Continue?"),
-              QMessageBox.Cancel, QMessageBox.Ok) != QMessageBox.Ok:
+              QMessageBox.Cancel, QMessageBox.Ok) == QMessageBox.Cancel:
                 return
         # Else: everthing ok: start writing img and html
         try:
@@ -464,12 +457,10 @@ class ImageMapPlugin:
             attrs = feature
         # Escape ' and " because they will collapse as JavaScript parameter
         if self.imageMapPluginGui.isInfoBoxChecked():
-            index = self.handleFieldIndexes(self.info_field_index, self.infoBoxAttributeField)
-            param = unicode(attrs[index])
+            param = unicode(attrs[self.info_field_index])
             self.info_boxes.append(self.removeNewLine(param))
         if self.imageMapPluginGui.isLabelChecked():
-            index = self.handleFieldIndexes(self.label_field_index, self.labelAttributeField)
-            param = unicode(attrs[index])
+            param = unicode(attrs[self.label_field_index])
             self.labels.append(self.removeNewLine(param))
         htm = htm + 'coords="'
         lastPixel = [0, 0]
@@ -503,14 +494,6 @@ class ImageMapPlugin:
             alt = self.removeNewLine(param) if self.imageMapPluginGui.isLabelChecked() else u'{}'.format(self.area_index)
             htm += '" alt="' + alt + '">\n'
             return unicode(htm)
-
-    # Returns the right index for virtual and non-virtual fields
-    def handleFieldIndexes(self, index, field):
-        # A negative index in this context means the field in question is a virtual one
-        if index < 0:
-            # This is a workaround, since the data provider cannot find virtual fields
-            index = self.attr_fields.index("{}".format(field))
-        return index
 
     # Transforms the coordinates of the current map canvas extent, so that it can then be used
     # for geometrical checks and as a filter
