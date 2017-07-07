@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>905</width>
-    <height>513</height>
+    <height>428</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -74,7 +74,8 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:10pt;&quot;&gt;This plugin will create an HTML file along with a corresponding PNG file taken from the current map view. &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:6pt;&quot;&gt; &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:10pt;&quot;&gt;- It can be used on any active point or (multi-)polygon vector layer (GeoPackage, Shapefile etc.).&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:10pt;&quot;&gt;- The marker label and the body of the infobox will use the individual field attribute as their text. An example of this is shown in the picture on the left.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:10pt;&quot;&gt;- The label and the body of the infobox will use the chosen field (attribute) as their text. An example of this is shown in the picture on the left.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:10pt;&quot;&gt;- The blue/orange arrows in the image indicate how the label and the infobox are moved from their anchor points, according to their offset values.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
@@ -159,6 +160,9 @@ p, li { white-space: pre-wrap; }
      </item>
      <item row="11" column="0" colspan="2">
       <widget class="QCheckBox" name="chkBoxSelectedOnly">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Selected features only</string>
        </property>
@@ -166,6 +170,9 @@ p, li { white-space: pre-wrap; }
      </item>
      <item row="11" column="1" colspan="4">
       <widget class="QLabel" name="featureCount">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
          <horstretch>0</horstretch>
@@ -285,7 +292,7 @@ p, li { white-space: pre-wrap; }
         </sizepolicy>
        </property>
        <property name="text">
-        <string>Image dimensions</string>
+        <string>Map view size</string>
        </property>
       </widget>
      </item>

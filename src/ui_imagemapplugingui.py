@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'html_image_map_creator_dialog_base.ui'
 #
-# Created: Wed Jul 05 15:15:02 2017
+# Created: Fri Jul 07 10:02:20 2017
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_ImageMapPluginGui(object):
     def setupUi(self, ImageMapPluginGui):
         ImageMapPluginGui.setObjectName(_fromUtf8("ImageMapPluginGui"))
-        ImageMapPluginGui.resize(905, 513)
+        ImageMapPluginGui.resize(905, 428)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         ImageMapPluginGui.setWindowIcon(icon)
@@ -99,9 +99,11 @@ class Ui_ImageMapPluginGui(object):
         self.featureTotal.setObjectName(_fromUtf8("featureTotal"))
         self.gridLayout_3.addWidget(self.featureTotal, 2, 4, 1, 1)
         self.chkBoxSelectedOnly = QtGui.QCheckBox(ImageMapPluginGui)
+        self.chkBoxSelectedOnly.setEnabled(False)
         self.chkBoxSelectedOnly.setObjectName(_fromUtf8("chkBoxSelectedOnly"))
         self.gridLayout_3.addWidget(self.chkBoxSelectedOnly, 11, 0, 1, 2)
         self.featureCount = QtGui.QLabel(ImageMapPluginGui)
+        self.featureCount.setEnabled(False)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -141,7 +143,6 @@ class Ui_ImageMapPluginGui(object):
         self.btnBrowse.setObjectName(_fromUtf8("btnBrowse"))
         self.gridLayout_3.addWidget(self.btnBrowse, 3, 4, 1, 1)
         self.chkBoxLabel = QtGui.QCheckBox(ImageMapPluginGui)
-        self.chkBoxLabel.setTristate(False)
         self.chkBoxLabel.setObjectName(_fromUtf8("chkBoxLabel"))
         self.gridLayout_3.addWidget(self.chkBoxLabel, 4, 0, 1, 1)
         self.cmbLabelAttributes = QtGui.QComboBox(ImageMapPluginGui)
@@ -149,7 +150,6 @@ class Ui_ImageMapPluginGui(object):
         self.cmbLabelAttributes.setObjectName(_fromUtf8("cmbLabelAttributes"))
         self.gridLayout_3.addWidget(self.cmbLabelAttributes, 4, 1, 1, 4)
         self.chkBoxInfoBox = QtGui.QCheckBox(ImageMapPluginGui)
-        self.chkBoxInfoBox.setTristate(False)
         self.chkBoxInfoBox.setObjectName(_fromUtf8("chkBoxInfoBox"))
         self.gridLayout_3.addWidget(self.chkBoxInfoBox, 6, 0, 1, 1)
         self.cmbInfoBoxAttributes = QtGui.QComboBox(ImageMapPluginGui)
@@ -200,7 +200,8 @@ class Ui_ImageMapPluginGui(object):
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:10pt;\">This plugin will create an HTML file along with a corresponding PNG file taken from the current map view. </span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:6pt;\"> </span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:10pt;\">- It can be used on any active point or (multi-)polygon vector layer (GeoPackage, Shapefile etc.).</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:10pt;\">- The marker label and the body of the infobox will use the individual field attribute as their text. An example of this is shown in the picture on the left.</span></p></body></html>", None))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:10pt;\">- The label and the body of the infobox will use the chosen field (attribute) as their text. An example of this is shown in the picture on the left.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:10pt;\">- The blue/orange arrows in the image indicate how the label and the infobox are moved from their anchor points, according to their offset values.</span></p></body></html>", None))
         self.lblLabelOffset.setText(_translate("ImageMapPluginGui", "Label offset", None))
         self.chkBoxSelectedOnly.setText(_translate("ImageMapPluginGui", "Selected features only", None))
         self.lblInfoOffset.setText(_translate("ImageMapPluginGui", "Infobox offset", None))
@@ -210,7 +211,7 @@ class Ui_ImageMapPluginGui(object):
         self.chkBoxLabel.setText(_translate("ImageMapPluginGui", "Label", None))
         self.chkBoxInfoBox.setText(_translate("ImageMapPluginGui", "Infobox body", None))
         self.txtFileName.setText(_translate("ImageMapPluginGui", "Path and name without extension", None))
-        self.lblDimensions.setText(_translate("ImageMapPluginGui", "Image dimensions", None))
+        self.lblDimensions.setText(_translate("ImageMapPluginGui", "Map view size", None))
         self.lblLabelPixel.setText(_translate("ImageMapPluginGui", "pixels", None))
         self.lblInfoPixel.setText(_translate("ImageMapPluginGui", "pixels", None))
 

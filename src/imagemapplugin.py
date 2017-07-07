@@ -41,9 +41,9 @@ VALID_GEOMETRY_TYPES = {
 }
 PLUGIN_PATH = os.path.dirname(__file__)
 # Template directories
-FULL_TEMPLATE_DIR = "{}/templates/full".format(PLUGIN_PATH)
-LABEL_TEMPLATE_DIR = "{}/templates/label".format(PLUGIN_PATH)
-INFO_TEMPLATE_DIR = "{}/templates/info_box".format(PLUGIN_PATH)
+FULL_TEMPLATE_DIR = u'{}/templates/full'.format(PLUGIN_PATH)
+LABEL_TEMPLATE_DIR = u'{}/templates/label'.format(PLUGIN_PATH)
+INFO_TEMPLATE_DIR = u'{}/templates/info_box'.format(PLUGIN_PATH)
 
 
 class ImageMapPlugin:
@@ -66,7 +66,7 @@ class ImageMapPlugin:
         self.info_boxes = []
         self.info_offset = 0
         self.info_checked = False
-        self.index = 0
+        self.area_index = 0
         self.feature_count = 0
 
     def initGui(self):
@@ -164,19 +164,21 @@ class ImageMapPlugin:
         for code, func in signals:
             QObject.connect(self.imageMapPluginGui, SIGNAL(code), func)
 
+        # Reload states of GUI components from previous session
         self.reloadGuiStates()
         # Set active layer name and expected image dimensions
         self.imageMapPluginGui.setLayerName(self.iface.activeLayer().name())
         self.imageMapPluginGui.setFeatureTotal("<b>{}</b> features total".format(self.iface.activeLayer().featureCount()))
         canvas_width = self.iface.mapCanvas().width()
         canvas_height = self.iface.mapCanvas().height()
-        dimensions = "~ width: <b>{}</b> pixels, height: <b>{}</b> pixels"
+        dimensions = "width ~<b>{}</b> pixels, height ~<b>{}</b> pixels"
         self.imageMapPluginGui.setDimensions(dimensions.format(canvas_width, canvas_height))
         # Set number of selected features
         selected_features = self.iface.activeLayer().selectedFeatureCount()
         selected_features_in_extent = self.nofSelectedFeaturesInExtent()
-        if selected_features == 0 or selected_features_in_extent == 0:
-            self.imageMapPluginGui.chkBoxSelectedOnly.setEnabled(False)
+        if selected_features > 0 and selected_features_in_extent > 0:
+            self.imageMapPluginGui.chkBoxSelectedOnly.setEnabled(True)
+            self.imageMapPluginGui.featureCount.setEnabled(True)
         select_msg = "<b>{}</b> selected, of which <b>{}</b> from map view will be exported"
         self.imageMapPluginGui.setFeatureCount(select_msg.format(selected_features, selected_features_in_extent))
         self.imageMapPluginGui.show()
@@ -297,7 +299,7 @@ class ImageMapPlugin:
     # replaces offset-placeholders in the "js.txt" templates
     def writeContent(self, dir, filename, offsets):
         content = ""
-        f = codecs.open("{}/{}".format(dir, filename), "r")
+        f = codecs.open(u'{}/{}'.format(dir, filename), "r")
         for line in f:
             content += line
         f.close()
@@ -433,7 +435,7 @@ class ImageMapPlugin:
             for line in html:
                 file.write(line.encode('utf-8'))
             file.close()
-            self.index = 0
+            self.area_index = 0
             self.iface.mapCanvas().saveAsImage(imgfilename)
             msg = "Files successfully saved to:\n" + self.files_path
             QMessageBox.information(self.iface.mainWindow(), self.MSG_BOX_TITLE, (msg), QMessageBox.Ok)
@@ -453,8 +455,8 @@ class ImageMapPlugin:
     # <area data-info-id=x shape=polygon coords=519,-52,519,..,-52,519,-52 alt=...>
     def ring2html(self, feature, ring, extent, extentAsPoly):
         param = u''
-        htm = u'<area data-info-id="{}" shape="poly" '.format(self.index)
-        self.index = self.index + 1
+        htm = u'<area data-info-id="{}" shape="poly" '.format(self.area_index)
+        self.area_index = self.area_index + 1
         if hasattr(feature, 'attributeMap'):
             attrs = feature.attributeMap()
         else:
@@ -496,9 +498,10 @@ class ImageMapPlugin:
         if not insideExtent:
             return ''
         else:
-            # Using last param as alt parameter (to be W3 compliant we need one)
-            alt = self.removeNewLine(param) if self.imageMapPluginGui.isLabelChecked() else "{}".format(self.index)
-            htm += '" alt="' + u''.join(alt) + '">\n'
+            # Using last param (labels) as alt parameter (to be W3 compliant we need one).
+            # If only info-boxes are selected, the area-index is used as an alternative
+            alt = self.removeNewLine(param) if self.imageMapPluginGui.isLabelChecked() else u'{}'.format(self.area_index)
+            htm += '" alt="' + alt + '">\n'
             return unicode(htm)
 
     # Returns the right index for virtual and non-virtual fields

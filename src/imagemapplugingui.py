@@ -27,13 +27,13 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
     def on_buttonBox_accepted(self):
         if not self.txtFileName.text():
             QMessageBox.warning(self, self.MSG_BOX_TITLE, (
-              "Missing export path and filename.\n"
-              "Please enter a path ending with a filename."), QMessageBox.Ok)
+              "Missing export path and filename\n"
+              "Enter an export path and a filename without extension."), QMessageBox.Ok)
         # Make sure at least one checkbox is checked
         elif (not self.chkBoxLabel.isChecked()) and (not self.chkBoxInfoBox.isChecked()):
             QMessageBox.warning(self, self.MSG_BOX_TITLE, (
-              "Not a single option checked?\n"
-              "Please choose at least one attribute to use on features."), QMessageBox.Ok)
+              "No field(s) assigned to label and/or infobox\n"
+              "Check at least either a label and/or infobox attribute."), QMessageBox.Ok)
         else:
             self.emit(SIGNAL("getFilesPath(QString)"), self.txtFileName.text())
             self.emit(SIGNAL("labelAttributeSet(QString)"), self.cmbLabelAttributes.currentText())
@@ -76,16 +76,13 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
         # if it is empty or it does not exist, fall back to user home directory
         current_path = os.path.dirname(self.current_file_name)
         exists = os.path.exists(current_path)
-        default_path = current_path if exists and self.current_file_name else expanduser("~")
+        default_path = current_path if exists else expanduser("~")
         saveFileName = QFileDialog.getSaveFileName(self, self.PATH_STRING, default_path, "")
         # If user clicks 'cancel' the current file name is not overwritten
         if saveFileName:
-            self.current_file_name = saveFileName
-        # If current file name is not empty, it is written into the line edit field
-        if self.current_file_name:
-            dir = os.path.dirname(self.current_file_name)
-            filename = os.path.basename(self.current_file_name).rsplit(".", 1)[0]
-            self.txtFileName.setText("{}/{}".format(dir, filename))
+            dir = os.path.dirname(saveFileName)
+            filename = os.path.basename(saveFileName).rsplit(".", 1)[0]
+            self.txtFileName.setText(u'{}/{}'.format(dir, filename))
 
     def setFilesPath(self, path):
         self.txtFileName.setText(path)

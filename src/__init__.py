@@ -30,10 +30,10 @@ def description():
     return "This plugin generates a HTML image map from the active point or polygon layer"
 
 def qgisMinimumVersion():
-    return "2.0"
+    return "2.14.16"
 
 def version():
-    return "2.0.1"
+    return "0.1"
 
 def author():
     return "Emil Sivro & Severin Fritschi"
