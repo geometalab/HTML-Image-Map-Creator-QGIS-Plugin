@@ -29,6 +29,10 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
             QMessageBox.warning(self, self.MSG_BOX_TITLE, (
               "Missing export path and filename\n"
               "Enter an export path and a filename without extension."), QMessageBox.Ok)
+        elif self.cmbLabelAttributes.count() == 0 or self.cmbInfoBoxAttributes.count() == 0:
+            QMessageBox.warning(self, self.MSG_BOX_TITLE, (
+              "No fields in attribute table.\n"
+              "Please add a field in the attribute table for this layer\n"), QMessageBox.Ok, QMessageBox.Ok)
         # Make sure at least one checkbox is checked
         elif (not self.chkBoxLabel.isChecked()) and (not self.chkBoxInfoBox.isChecked()):
             QMessageBox.warning(self, self.MSG_BOX_TITLE, (
@@ -77,11 +81,11 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
         current_path = os.path.dirname(self.current_file_name)
         exists = os.path.exists(current_path)
         default_path = current_path if exists else expanduser("~")
-        saveFileName = QFileDialog.getSaveFileName(self, self.PATH_STRING, default_path, "")
+        save_filename = QFileDialog.getSaveFileName(self, self.PATH_STRING, default_path, "")
         # If user clicks 'cancel' the current file name is not overwritten
-        if saveFileName:
-            dir = os.path.dirname(saveFileName)
-            filename = os.path.basename(saveFileName).rsplit(".", 1)[0]
+        if save_filename:
+            dir = os.path.dirname(save_filename)
+            filename = os.path.basename(save_filename).rsplit(".", 1)[0]
             self.txtFileName.setText(u'{}/{}'.format(dir, filename))
 
     def setFilesPath(self, path):
@@ -103,6 +107,10 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
         # Populate comboboxes with attribute field names of active layer
         self.cmbLabelAttributes.addItems(layerAttr)
         self.cmbInfoBoxAttributes.addItems(layerAttr)
+
+    def clearComboboxes(self):
+        self.cmbLabelAttributes.clear()
+        self.cmbInfoBoxAttributes.clear()
 
     def setProgressBarMax(self, maxInt):
         # Minimum default to zero

@@ -34,16 +34,18 @@ from imagemapplugingui import ImageMapPluginGui
 import imagemapplugin_rc
 import codecs
 
+# Constants
 VALID_GEOMETRY_TYPES = {
+    QGis.WKBPoint,
+    QGis.WKBMultiPoint,
     QGis.WKBPolygon,
-    QGis.WKBMultiPolygon,
-    QGis.WKBPoint
+    QGis.WKBMultiPolygon
 }
 PLUGIN_PATH = os.path.dirname(__file__)
-# Template directories
 FULL_TEMPLATE_DIR = u'{}/templates/full'.format(PLUGIN_PATH)
 LABEL_TEMPLATE_DIR = u'{}/templates/label'.format(PLUGIN_PATH)
 INFO_TEMPLATE_DIR = u'{}/templates/info_box'.format(PLUGIN_PATH)
+POINT_AREA_BUFFER = 10  # (plus-minus 2x <constant> 20pixel areas)
 
 
 class ImageMapPlugin:
@@ -58,6 +60,7 @@ class ImageMapPlugin:
         self.info_field_index = 0
         self.attr_fields = []
         self.feature_total = ""
+        self.layer_id = u''
         self.layer_name = ""
         self.dimensions = ""
         self.labels = []
@@ -95,37 +98,37 @@ class ImageMapPlugin:
 
     def run(self):
         # Check if active layer is a polygon layer:
-        layer = self.iface.activeLayer()
-        if layer is None:
+        self.layer = self.iface.activeLayer()
+        if self.layer is None:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
               "No active layer found\n"
-              "Please select a (multi) polygon or point layer first, \n"
-              "by selecting it in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+              "Please select a (multi-)polygon or (multi-)point layer first, \n"
+              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
             return
         # Don't know if this is possible / needed
-        if not layer.isValid():
+        if not self.layer.isValid():
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
               "No VALID layer found\n"
-              "Please select a valid (multi) polygon or point layer first, \n"
-              "by selecting it in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+              "Please select a valid (multi-)polygon or (multi-)point layer first, \n"
+              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
             return
-        if (layer.type() > 0):  # 0 = vector, 1 = raster
+        if (self.layer.type() > 0):  # 0 = vector, 1 = raster
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
               "Wrong layer type, only vector layers may be used...\n"
               "Please select a vector layer first, \n"
-              "by selecting it in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
             return
-        self.provider = layer.dataProvider()
+        self.provider = self.layer.dataProvider()
         if self.provider.geometryType() not in VALID_GEOMETRY_TYPES:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "Wrong geometry type, only (multi) polygons and points may be used.\n"
-              "Please select a (multi) polygon or point layer first, \n"
-              "by selecting it in the legend"), QMessageBox.Ok, QMessageBox.Ok)
+              "Wrong geometry type, only (multi-)polygons and (multi-)points may be used.\n"
+              "Please select a (multi-)polygon or (multi-)point layer first, \n"
+              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
             return
-
+        self.layer.updatedFields.connect(self.reloadFields)
         # We need the fields of the active layer to show in the attribute combobox in the gui:
         self.attr_fields = []
-        fields = self.iface.activeLayer().pendingFields()
+        fields = self.layer.pendingFields()
         if hasattr(fields, 'iteritems'):
             for (i, field) in fields.iteritems():
                 self.attr_fields.append(field.name().trimmed())
@@ -140,7 +143,7 @@ class ImageMapPlugin:
         self.imageMapPluginGui.setAttributeFields(self.attr_fields)
         self.layerAttr = self.attr_fields
         self.selectedFeaturesOnly = False  # default: all features in current extent
-        # Catch SIGNAL's
+        # Catch SIGNALs
         signals = [
             ("getFilesPath(QString)", self.setFilesPath),
             ("getLayerName(QString)", self.setLayerName),
@@ -157,19 +160,19 @@ class ImageMapPlugin:
             ("go(QString)", self.go),
             ("setMapCanvasSize(int, int)", self.setMapCanvasSize),
         ]
-        for code, func in signals:
-            QObject.connect(self.imageMapPluginGui, SIGNAL(code), func)
-        # Reload states of GUI components from previous session
+        for code, slot in signals:
+            QObject.connect(self.imageMapPluginGui, SIGNAL(code), slot)
+        # Reload GUI states
         self.reloadGuiStates()
         # Set active layer name and expected image dimensions
-        self.imageMapPluginGui.setLayerName(self.iface.activeLayer().name())
-        self.imageMapPluginGui.setFeatureTotal("<b>{}</b> features total".format(self.iface.activeLayer().featureCount()))
+        self.imageMapPluginGui.setLayerName(self.layer.name())
+        self.imageMapPluginGui.setFeatureTotal("<b>{}</b> features total".format(self.layer.featureCount()))
         canvas_width = self.iface.mapCanvas().width()
         canvas_height = self.iface.mapCanvas().height()
         dimensions = "width ~<b>{}</b> pixels, height ~<b>{}</b> pixels"
         self.imageMapPluginGui.setDimensions(dimensions.format(canvas_width, canvas_height))
         # Set number of selected features
-        selected_features = self.iface.activeLayer().selectedFeatureCount()
+        selected_features = self.layer.selectedFeatureCount()
         selected_features_in_extent = self.nofSelectedFeaturesInExtent()
         if selected_features > 0 and selected_features_in_extent > 0:
             self.imageMapPluginGui.chkBoxSelectedOnly.setEnabled(True)
@@ -178,10 +181,18 @@ class ImageMapPlugin:
         self.imageMapPluginGui.setFeatureCount(select_msg.format(selected_features, selected_features_in_extent))
         self.imageMapPluginGui.show()
 
+    # Reloads the fields listed in comboboxes, as soon as the attribute table
+    # is altered
+    def reloadFields(self):
+        self.imageMapPluginGui.clearComboboxes()
+        self.attr_fields = [field.name().strip() for field in self.layer.pendingFields()]
+        self.imageMapPluginGui.setAttributeFields(self.attr_fields)
+
+    # Reloads states of GUI components from previous session
     def reloadGuiStates(self):
         self.imageMapPluginGui.setFilesPath(self.files_path)
         # Only reload states if the plugin is used on the same layer as before:
-        if self.layer_name == self.iface.activeLayer().name():
+        if self.layer_id == self.layer.id():
             # Reload selected features in combo-boxes:
             if self.label_field_index < len(self.attr_fields):
                 self.imageMapPluginGui.cmbLabelAttributes.setCurrentIndex(self.label_field_index)
@@ -206,7 +217,7 @@ class ImageMapPlugin:
         isInfoChecked = self.imageMapPluginGui.isInfoBoxChecked()
         onlyLabel = isLabelChecked and not isInfoChecked
         onlyInfo = isInfoChecked and not isLabelChecked
-        html.append(u'\n<head>\n<title>' + self.iface.activeLayer().name() +
+        html.append(u'\n<head>\n<title>' + self.layer.name() +
                     '</title>\n<meta charset="UTF-8">\n</head>\n<body>')
         html.append(u'\n<!-- BEGIN EXTRACTABLE CONTENT -->')
         if isInfoChecked:
@@ -242,14 +253,14 @@ class ImageMapPlugin:
                 count = count + 1
         else:
             request = QgsFeatureRequest().setFilterRect(mapCanvasExtent)
-            for feature in self.iface.activeLayer().getFeatures(request):
+            for feature in self.layer.getFeatures(request):
                 count = count + 1
         self.imageMapPluginGui.setProgressBarMax(count)
         progressValue = 0
         # In case of points / lines we need to buffer geometries, calculate bufferdistance here
-        bufferDistance = self.iface.mapCanvas().mapUnitsPerPixel() * 10  # (plusminus 20pixel areas)
+        bufferDistance = self.iface.mapCanvas().mapUnitsPerPixel() * POINT_AREA_BUFFER
         # Get a list of all selected features ids.
-        selectedFeaturesIds = self.iface.activeLayer().selectedFeaturesIds()
+        selectedFeaturesIds = self.layer.selectedFeaturesIds()
         # It seems that a postgres provider is on the end of file now
         if hasattr(self.provider, 'select'):
             self.provider.select(self.provider.attributeIndexes(), mapCanvasExtent, True, True)
@@ -259,7 +270,7 @@ class ImageMapPlugin:
                 progressValue = progressValue + 1
                 self.imageMapPluginGui.setProgressBarValue(progressValue)
         else:   # QGIS >= 2.0
-            for feature in self.iface.activeLayer().getFeatures(request):
+            for feature in self.layer.getFeatures(request):
                 html.extend(self.handleGeom(feature, selectedFeaturesIds, self.doCrsTransform, bufferDistance))
                 progressValue = progressValue + 1
                 self.imageMapPluginGui.setProgressBarValue(progressValue)
@@ -311,7 +322,7 @@ class ImageMapPlugin:
                 geom.transform(self.crsTransform)
             else:
                 QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-                  "Cannot crs-transform geometry in your QGIS version ...\n"
+                  "Cannot crs-transform geometry in your version of QGIS ...\n"
                   "Only QGIS version 1.5 and above can transform geometries on the fly\n"
                   "As a workaround, you can try to save the layer in the destination crs\n"
                   "(eg as shapefile) and reload that layer...\n"), QMessageBox.Ok, QMessageBox.Ok)
@@ -328,10 +339,16 @@ class ImageMapPlugin:
             geomCopy = QgsGeometry.fromPoint(geom.asPoint())
             polygon = geomCopy.buffer(bufferDistance, 0).asPolygon()
             html.append(self.polygon2html(feature, projectExtent, projectExtentAsPolygon, polygon))
-        if geom.wkbType() == QGis.WKBPolygon:  # 3 = WKBTYPE.WKBPolygon:
+        if geom.wkbType() == QGis.WKBMultiPoint:  # 4 = WKBMultiPoint
+            multipoint = geom.asMultiPoint()
+            for point in multipoint:  # returns a list
+                geomCopy = QgsGeometry.fromPoint(point)
+                polygon = geomCopy.buffer(bufferDistance, 0).asPolygon()
+                html.append(self.polygon2html(feature, projectExtent, projectExtentAsPolygon, polygon))
+        if geom.wkbType() == QGis.WKBPolygon:  # 3 = WKBPolygon:
             polygon = geom.asPolygon()  # returns a list
             html.append(self.polygon2html(feature, projectExtent, projectExtentAsPolygon, polygon))
-        if geom.wkbType() == QGis.WKBMultiPolygon:  # 6 = WKBTYPE.WKBMultiPolygon:
+        if geom.wkbType() == QGis.WKBMultiPolygon:  # 6 = WKBMultiPolygon:
             multipolygon = geom.asMultiPolygon()  # returns a list
             for polygon in multipolygon:
                 html.append(self.polygon2html(feature, projectExtent, projectExtentAsPolygon, polygon))
@@ -360,7 +377,7 @@ class ImageMapPlugin:
 
     def labelAttributeFieldSet(self, attributeFieldQstring):
         self.labelAttributeField = attributeFieldQstring
-        self.label_field_index = self.iface.activeLayer().fieldNameIndex(attributeFieldQstring)
+        self.label_field_index = self.layer.fieldNameIndex(attributeFieldQstring)
 
     def setLabelOffset(self, offset):
         self.label_offset = offset
@@ -370,7 +387,7 @@ class ImageMapPlugin:
 
     def infoBoxAttributeFieldSet(self, attributeFieldQstring):
         self.infoBoxAttributeField = attributeFieldQstring
-        self.info_field_index = self.iface.activeLayer().fieldNameIndex(attributeFieldQstring)
+        self.info_field_index = self.layer.fieldNameIndex(attributeFieldQstring)
 
     def setInfoOffset(self, offset):
         self.info_offset = offset
@@ -431,7 +448,9 @@ class ImageMapPlugin:
             self.area_index = 0
             self.iface.mapCanvas().saveAsImage(imgfilename)
             msg = "Files successfully saved to:\n" + self.files_path
-            QMessageBox.information(self.iface.mainWindow(), self.MSG_BOX_TITLE, (msg), QMessageBox.Ok)
+            QMessageBox.information(self.iface.mainWindow(), self.MSG_BOX_TITLE, msg, QMessageBox.Ok)
+            # Remember layer id:
+            self.layer_id = self.layer.id()
             self.imageMapPluginGui.hide()
         except IOError:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
@@ -445,7 +464,7 @@ class ImageMapPlugin:
 
     # For given ring in feature, IF at least one point in ring is in 'mapCanvasExtent',
     # generate a string like:
-    # <area data-info-id=x shape=polygon coords=519,-52,519,..,-52,519,-52 alt=...>
+    # <area data-info-id=x shape="poly" coords=519,-52,519,..,-52,519,-52 alt=...>
     def ring2html(self, feature, ring, extent, extentAsPoly):
         param = u''
         htm = u'<area data-info-id="{}" shape="poly" '.format(self.area_index)
@@ -496,7 +515,7 @@ class ImageMapPlugin:
             return unicode(htm)
 
     # Transforms the coordinates of the current map canvas extent, so that it can then be used
-    # for geometrical checks and as a filter
+    # for geometric checks and as a filter
     def getTransformedMapCanvas(self):
         mapCanvasExtent = self.iface.mapCanvas().extent()
         self.doCrsTransform = False
@@ -505,10 +524,10 @@ class ImageMapPlugin:
         if hasattr(self.iface.mapCanvas().mapSettings(), 'destinationSrs'):
             # QGIS < 2.0
             destinationCrs = self.iface.mapCanvas().mapSettings().destinationSrs()
-            layerCrs = self.iface.activeLayer().srs()
+            layerCrs = self.layer.srs()
         else:
             destinationCrs = self.iface.mapCanvas().mapSettings().destinationCrs()
-            layerCrs = self.iface.activeLayer().crs()
+            layerCrs = self.layer.crs()
         if not destinationCrs == layerCrs:
             # We have to transform the mapCanvasExtent to the data/layer Crs to be able
             # to retrieve the features from the data provider,
@@ -523,22 +542,25 @@ class ImageMapPlugin:
                 self.doCrsTransform = True
         return mapCanvasExtent
 
-    # Returns a list of boundingBoxes representing the original geometry
+    # Returns a list of bounding boxes representing the original geometry
     def geom2rect(self, geom):
         if geom.wkbType() == QGis.WKBPoint:  # 1 = WKBPoint
             return [geom.boundingBox()]
+        if geom.wkbType() == QGis.WKBMultiPoint:  # 4 = WKBMultiPoint
+            multipoint = geom.asMultiPoint()
+            return [geom.boundingBox() for point in multipoint]
         if geom.wkbType() == QGis.WKBPolygon:  # 3 = WKBPolygon:
             return [geom.boundingBox()]
         if geom.wkbType() == QGis.WKBMultiPolygon:  # 6 = WKBMultiPolygon:
             multipolygon = geom.asMultiPolygon()
             return [geom.boundingBox() for polygon in multipolygon]
 
-    # Returns the number of *selected* features (points/polygons/multi-polygons) within
-    # the current map view
+    # Returns the number of *selected* features ((multi-)points/(multi-)polygons)
+    # within the current map view
     def nofSelectedFeaturesInExtent(self):
         count = 0
         mapCanvasExtent = self.getTransformedMapCanvas()
-        iter = self.iface.activeLayer().selectedFeatures()
+        iter = self.layer.selectedFeatures()
         for feature in iter:
             geom = feature.geometry()
             if not geom is None:
