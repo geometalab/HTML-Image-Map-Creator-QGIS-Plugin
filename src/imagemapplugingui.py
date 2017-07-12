@@ -32,7 +32,7 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
         elif self.cmbLabelAttributes.count() == 0 or self.cmbInfoBoxAttributes.count() == 0:
             QMessageBox.warning(self, self.MSG_BOX_TITLE, (
               "No fields in attribute table.\n"
-              "Please add a field in the attribute table for this layer\n"), QMessageBox.Ok, QMessageBox.Ok)
+              "Please add a field in the attribute table for this layer"), QMessageBox.Ok, QMessageBox.Ok)
         # Make sure at least one checkbox is checked
         elif (not self.chkBoxLabel.isChecked()) and (not self.chkBoxInfoBox.isChecked()):
             QMessageBox.warning(self, self.MSG_BOX_TITLE, (

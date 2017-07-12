@@ -120,8 +120,7 @@ class ImageMapPlugin:
         flags = Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMaximizeButtonHint  # QgisGui.ModalDialogFlags
         # Construct GUI
         # (In future modeless dialogs reuse this dialog)
-        if hasattr(self, 'imageMapPlugin') is False:
-            self.imageMapPluginGui = ImageMapPluginGui(self.iface.mainWindow(), flags)
+        self.imageMapPluginGui = ImageMapPluginGui(self.iface.mainWindow(), flags)
         self.imageMapPluginGui.setAttributeFields(self.attr_fields)
         self.layerAttr = self.attr_fields
         self.selectedFeaturesOnly = False  # default: all features in current extent
@@ -529,7 +528,7 @@ class ImageMapPlugin:
                 self.doCrsTransform = True
         return mapCanvasExtent
 
-    # Returns a list of bounding boxes representing the original geometry
+    # Returns a list of bounding boxes, which represents the original geometries
     def geom2rect(self, geom):
         if geom.wkbType() == QGis.WKBPoint:  # 1 = WKBPoint
             return [geom.boundingBox()]
