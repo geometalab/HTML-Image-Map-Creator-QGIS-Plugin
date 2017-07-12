@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>HTML Image Map Creator</string>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <property name="windowIcon">
    <iconset>
     <normaloff/>

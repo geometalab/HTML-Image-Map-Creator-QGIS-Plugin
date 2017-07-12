@@ -108,10 +108,6 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
         self.cmbLabelAttributes.addItems(layerAttr)
         self.cmbInfoBoxAttributes.addItems(layerAttr)
 
-    def clearComboboxes(self):
-        self.cmbLabelAttributes.clear()
-        self.cmbInfoBoxAttributes.clear()
-
     def setProgressBarMax(self, maxInt):
         # Minimum default to zero
         self.progressBar.setMinimum(0)

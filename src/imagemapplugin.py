@@ -56,21 +56,10 @@ class ImageMapPlugin:
         # Save reference to the QGIS interface and initialize instance variables
         self.iface = iface
         self.files_path = ""
-        self.label_field_index = 0
-        self.info_field_index = 0
-        self.attr_fields = []
-        self.feature_total = ""
         self.layer_id = u''
-        self.layer_name = ""
-        self.dimensions = ""
         self.labels = []
-        self.label_offset = 0
-        self.label_checked = False
         self.info_boxes = []
-        self.info_offset = 0
-        self.info_checked = False
         self.area_index = 0
-        self.feature_count = 0
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -125,19 +114,12 @@ class ImageMapPlugin:
               "Please select a (multi-)polygon or (multi-)point layer first, \n"
               "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
             return
-        self.layer.updatedFields.connect(self.reloadFields)
         # We need the fields of the active layer to show in the attribute combobox in the gui:
-        self.attr_fields = []
-        fields = self.layer.pendingFields()
-        if hasattr(fields, 'iteritems'):
-            for (i, field) in fields.iteritems():
-                self.attr_fields.append(field.name().trimmed())
-        else:
-            for field in fields:
-                self.attr_fields.append(field.name().strip())
+        self.attr_fields = self.loadFields()
         # Construct gui (using these fields)
         flags = Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMaximizeButtonHint  # QgisGui.ModalDialogFlags
-        # Construct gui: if available reuse this one
+        # Construct GUI
+        # (In future modeless dialogs reuse this dialog)
         if hasattr(self, 'imageMapPlugin') is False:
             self.imageMapPluginGui = ImageMapPluginGui(self.iface.mainWindow(), flags)
         self.imageMapPluginGui.setAttributeFields(self.attr_fields)
@@ -181,12 +163,17 @@ class ImageMapPlugin:
         self.imageMapPluginGui.setFeatureCount(select_msg.format(selected_features, selected_features_in_extent))
         self.imageMapPluginGui.show()
 
-    # Reloads the fields listed in comboboxes, as soon as the attribute table
-    # is altered
-    def reloadFields(self):
-        self.imageMapPluginGui.clearComboboxes()
-        self.attr_fields = [field.name().strip() for field in self.layer.pendingFields()]
-        self.imageMapPluginGui.setAttributeFields(self.attr_fields)
+    # Loads fields in attribute table to be listed in comboboxes
+    def loadFields(self):
+        fields = []
+        pending_fields = self.layer.pendingFields()
+        if hasattr(pending_fields, 'iteritems'):
+            for (i, field) in pending_fields.iteritems():
+                fields.append(field.name().trimmed())
+        else:
+            for field in pending_fields:
+                fields.append(field.name().strip())
+        return fields
 
     # Reloads states of GUI components from previous session
     def reloadGuiStates(self):
@@ -287,13 +274,13 @@ class ImageMapPlugin:
             html.append(self.writeContent(FULL_TEMPLATE_DIR, filename, [self.label_offset, self.info_offset]))
         # Dynamically write JavaScript array from field attribute list
         if self.labels:
-            html.append(u'\nvar labels = ["' + '", "'.join(self.labels) + '"]; ')
+            html.append(u'\nvar labels = ["' + '", "'.join(self.labels) + '"];')
         if self.info_boxes:
-            html.append(u'\nvar infoBoxes = ["' + '", "'.join(self.info_boxes) + '"]; ')
+            html.append(u'\nvar infoBoxes = ["' + '", "'.join(self.info_boxes) + '"];')
         # Clean up list afterwards
         del self.labels[:]
         del self.info_boxes[:]
-        html.append(u'})();')
+        html.append(u'\n})();')
         html.append(u'\n</script>')
         html.append(u'\n<!-- END EXTRACTABLE CONTENT -->')
         html.append(u'\n</body>\n</html>')

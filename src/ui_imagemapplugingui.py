@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'html_image_map_creator_dialog_base.ui'
 #
-# Created: Mon Jul 10 14:42:24 2017
+# Created: Wed Jul 12 11:43:34 2017
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,6 +27,7 @@ class Ui_ImageMapPluginGui(object):
     def setupUi(self, ImageMapPluginGui):
         ImageMapPluginGui.setObjectName(_fromUtf8("ImageMapPluginGui"))
         ImageMapPluginGui.resize(905, 428)
+        ImageMapPluginGui.setModal(True)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         ImageMapPluginGui.setWindowIcon(icon)
