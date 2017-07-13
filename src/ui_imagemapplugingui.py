@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'html_image_map_creator_dialog_base.ui'
 #
-# Created: Wed Jul 12 11:43:34 2017
+# Created: Thu Jul 13 10:31:08 2017
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -60,7 +60,6 @@ class Ui_ImageMapPluginGui(object):
         self.textEdit.setObjectName(_fromUtf8("textEdit"))
         self.gridLayout.addWidget(self.textEdit, 0, 2, 1, 1)
         self.buttonBox = QtGui.QDialogButtonBox(ImageMapPluginGui)
-        self.buttonBox.setEnabled(True)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))

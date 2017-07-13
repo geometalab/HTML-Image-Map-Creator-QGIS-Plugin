@@ -20,35 +20,22 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
     def __init__(self, parent, fl):
         QDialog.__init__(self, parent, fl)
         self.setupUi(self)
+        self.setOkButtonState(False)
         self.label_components = [self.cmbLabelAttributes, self.lblLabelOffset, self.spinBoxLabel, self.lblLabelPixel]
         self.info_components = [self.cmbInfoBoxAttributes, self.lblInfoOffset, self.spinBoxInfo, self.lblInfoPixel]
-        self.current_file_name = ""
 
     def on_buttonBox_accepted(self):
-        if not self.txtFileName.text():
-            QMessageBox.warning(self, self.MSG_BOX_TITLE, (
-              "Missing export path and filename\n"
-              "Enter an export path and a filename without extension."), QMessageBox.Ok)
-        elif self.cmbLabelAttributes.count() == 0 or self.cmbInfoBoxAttributes.count() == 0:
-            QMessageBox.warning(self, self.MSG_BOX_TITLE, (
-              "No fields in attribute table.\n"
-              "Please add a field in the attribute table for this layer"), QMessageBox.Ok, QMessageBox.Ok)
-        # Make sure at least one checkbox is checked
-        elif (not self.chkBoxLabel.isChecked()) and (not self.chkBoxInfoBox.isChecked()):
-            QMessageBox.warning(self, self.MSG_BOX_TITLE, (
-              "No field(s) assigned to label and/or infobox\n"
-              "Check at least either a label and/or infobox attribute."), QMessageBox.Ok)
-        else:
-            self.emit(SIGNAL("getFilesPath(QString)"), self.txtFileName.text())
-            self.emit(SIGNAL("labelAttributeSet(QString)"), self.cmbLabelAttributes.currentText())
-            self.emit(SIGNAL("spinLabelSet(int)"), self.spinBoxLabel.value())
-            self.emit(SIGNAL("getCbkBoxLabel(bool)"), self.chkBoxLabel.isChecked())
-            self.emit(SIGNAL("infoBoxAttributeSet(QString)"), self.cmbInfoBoxAttributes.currentText())
-            self.emit(SIGNAL("spinInfoSet(int)"), self.spinBoxInfo.value())
-            self.emit(SIGNAL("getCbkBoxInfo(bool)"), self.chkBoxInfoBox.isChecked())
-            self.emit(SIGNAL("getLayerName(QString)"), self.txtLayerName.text())
-            # and GO
-            self.emit(SIGNAL("go(QString)"), "ok")
+        self.emit(SIGNAL("getFilesPath(QString)"), self.txtFileName.text())
+        self.emit(SIGNAL("labelAttributeSet(QString)"), self.cmbLabelAttributes.currentText())
+        self.emit(SIGNAL("spinLabelSet(int)"), self.spinBoxLabel.value())
+        self.emit(SIGNAL("getCbkBoxLabel(bool)"), self.chkBoxLabel.isChecked())
+        self.emit(SIGNAL("infoBoxAttributeSet(QString)"), self.cmbInfoBoxAttributes.currentText())
+        self.emit(SIGNAL("spinInfoSet(int)"), self.spinBoxInfo.value())
+        self.emit(SIGNAL("getCbkBoxInfo(bool)"), self.chkBoxInfoBox.isChecked())
+        self.emit(SIGNAL("getLayerName(QString)"), self.txtLayerName.text())
+        # and GO
+        self.emit(SIGNAL("go(QString)"), "ok")
+        self.setOkButtonState(False)
 
     def on_buttonBox_rejected(self):
         self.done(0)
@@ -59,10 +46,12 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
     def on_chkBoxLabel_stateChanged(self):
         for label_comp in self.label_components:
             label_comp.setEnabled(self.chkBoxLabel.isChecked())
+        self.emit(SIGNAL("getCurrentLabelState(bool)"), self.chkBoxLabel.isChecked())
 
     def on_chkBoxInfoBox_stateChanged(self):
         for info_comp in self.info_components:
             info_comp.setEnabled(self.chkBoxInfoBox.isChecked())
+        self.emit(SIGNAL("getCurrentInfoState(bool)"), self.chkBoxInfoBox.isChecked())
 
     # If the text in this field still begins with: 'full path and name'
     def on_txtFileName_cursorPositionChanged(self, old, new):
@@ -73,12 +62,13 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
     # Without this magic, the on_btnOk_clicked will be called two times: one clicked() and one clicked(bool checked)
     @pyqtSignature("on_btnBrowse_clicked()")
     def on_btnBrowse_clicked(self):
+        current_file_name = ""
         # Remember previously browsed directories
         if self.txtFileName.text():
-            self.current_file_name = self.txtFileName.text()
+            current_file_name = self.txtFileName.text()
         # Set current default export directory to the recently browsed file directory,
         # if it is empty or it does not exist, fall back to user home directory
-        current_path = os.path.dirname(self.current_file_name)
+        current_path = os.path.dirname(current_file_name)
         exists = os.path.exists(current_path)
         default_path = current_path if exists else expanduser("~")
         save_filename = QFileDialog.getSaveFileName(self, self.PATH_STRING, default_path, "")
@@ -88,6 +78,7 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
             filename = os.path.basename(save_filename).rsplit(".", 1)[0]
             self.txtFileName.setText(u'{}/{}'.format(dir, filename))
 
+    # SIGNAL slots:
     def setFilesPath(self, path):
         self.txtFileName.setText(path)
 
@@ -115,6 +106,9 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
 
     def setProgressBarValue(self, valInt):
         self.progressBar.setValue(valInt)
+
+    def setOkButtonState(self, state):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(state)
 
     def isLabelChecked(self):
         return self.chkBoxLabel.isChecked()

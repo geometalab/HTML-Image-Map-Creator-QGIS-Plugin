@@ -33,7 +33,7 @@ def qgisMinimumVersion():
     return "2.14.16"
 
 def version():
-    return "0.3"
+    return "0.4"
 
 def author():
     return "Emil Sivro & Severin Fritschi"

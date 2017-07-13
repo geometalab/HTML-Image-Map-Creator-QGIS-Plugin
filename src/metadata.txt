@@ -5,7 +5,7 @@ name:HTML Image Map Creator
 author:Emil Sivro, Severin Fritschi
 qgisMinimumVersion:2.14.16
 description:This plugin creates a static image map (HTML5/CSS/JavaScript) with interactive features
-version:0.3
+version:0.4
 experimental=True
 
 ; end of mandatory metadata
@@ -14,6 +14,7 @@ experimental=True
 ; start of optional metadata
 
 changelog:
+    0.4   (07-2017) Ok button states, fixed errors, refactoring
     0.3   (07-2017) Error handling, added multi-point compatibility, overall improvements
     0.2   (07-2017) Removed marker symbols, refactored code & templates
     0.1   (06-2017) Initial build

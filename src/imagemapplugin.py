@@ -60,6 +60,8 @@ class ImageMapPlugin:
         self.labels = []
         self.info_boxes = []
         self.area_index = 0
+        self.label_currently_checked = False
+        self.info_currently_checked = False
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -88,39 +90,21 @@ class ImageMapPlugin:
     def run(self):
         # Check if active layer is a polygon layer:
         self.layer = self.iface.activeLayer()
-        if self.layer is None:
-            QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "No active layer found\n"
-              "Please select a (multi-)polygon or (multi-)point layer first, \n"
-              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
-            return
-        # Don't know if this is possible / needed
-        if not self.layer.isValid():
-            QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "No VALID layer found\n"
-              "Please select a valid (multi-)polygon or (multi-)point layer first, \n"
-              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
-            return
-        if (self.layer.type() > 0):  # 0 = vector, 1 = raster
-            QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "Wrong layer type, only vector layers may be used...\n"
-              "Please select a vector layer first, \n"
-              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
-            return
-        self.provider = self.layer.dataProvider()
-        if self.provider.geometryType() not in VALID_GEOMETRY_TYPES:
-            QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "Wrong geometry type, only (multi-)polygons and (multi-)points may be used.\n"
-              "Please select a (multi-)polygon or (multi-)point layer first, \n"
-              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
+        if not self.isLayerValid():
             return
         # We need the fields of the active layer to show in the attribute combobox in the gui:
         self.attr_fields = self.loadFields()
-        # Construct gui (using these fields)
-        flags = Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMaximizeButtonHint  # QgisGui.ModalDialogFlags
-        # Construct GUI
+        if not self.attr_fields:
+            QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
+              "No fields in attribute table\n"
+              "Please add at least one field in the attribute table for this layer\n"
+              "and then restart the plugin."), QMessageBox.Ok, QMessageBox.Ok)
+            return
+        # Construct GIO (using these fields)
         # (In future modeless dialogs reuse this dialog)
+        flags = Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMaximizeButtonHint  # QgisGui.ModalDialogFlags
         self.imageMapPluginGui = ImageMapPluginGui(self.iface.mainWindow(), flags)
+        self.imageMapPluginGui.txtFileName.textChanged.connect(self.setCurrentFilesPath)
         self.imageMapPluginGui.setAttributeFields(self.attr_fields)
         self.layerAttr = self.attr_fields
         self.selectedFeaturesOnly = False  # default: all features in current extent
@@ -133,9 +117,11 @@ class ImageMapPlugin:
             ("labelAttributeSet(QString)", self.labelAttributeFieldSet),
             ("spinLabelSet(int)", self.setLabelOffset),
             ("getCbkBoxLabel(bool)", self.setLabelChecked),
+            ("getCurrentLabelState(bool)", self.setCurrentLabelState),
             ("infoBoxAttributeSet(QString)", self.infoBoxAttributeFieldSet),
             ("spinInfoSet(int)", self.setInfoOffset),
             ("getCbkBoxInfo(bool)", self.setInfoChecked),
+            ("getCurrentInfoState(bool)", self.setCurrentInfoState),
             ("getCbkBoxSelectedOnly(bool)", self.setSelectedOnly),
             ("getSelectedFeatureCount(QString)", self.setFeatureCount),
             ("go(QString)", self.go),
@@ -162,6 +148,14 @@ class ImageMapPlugin:
         self.imageMapPluginGui.setFeatureCount(select_msg.format(selected_features, selected_features_in_extent))
         self.imageMapPluginGui.show()
 
+    # Enables Ok-button in GUI if conditions are met
+    def isReady(self):
+        if (self.current_filename and
+           (self.label_currently_checked or self.info_currently_checked)):
+            self.imageMapPluginGui.setOkButtonState(True)
+        else:
+            self.imageMapPluginGui.setOkButtonState(False)
+
     # Loads fields in attribute table to be listed in comboboxes
     def loadFields(self):
         fields = []
@@ -174,6 +168,7 @@ class ImageMapPlugin:
                 fields.append(field.name().strip())
         return fields
 
+        
     # Reloads states of GUI components from previous session
     def reloadGuiStates(self):
         self.imageMapPluginGui.setFilesPath(self.files_path)
@@ -193,6 +188,35 @@ class ImageMapPlugin:
             self.imageMapPluginGui.chkBoxLabel.setCheckState(label_state)
             self.imageMapPluginGui.chkBoxInfoBox.setCheckState(info_state)
 
+    def isLayerValid(self):
+        if self.layer is None:
+            QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
+              "No active layer found\n"
+              "Please select a (multi-)polygon or (multi-)point layer first, \n"
+              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
+            return False
+        # Don't know if this is possible / needed
+        if not self.layer.isValid():
+            QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
+              "No VALID layer found\n"
+              "Please select a valid (multi-)polygon or (multi-)point layer first, \n"
+              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
+            return False
+        if (self.layer.type() > 0):  # 0 = vector, 1 = raster
+            QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
+              "Wrong layer type, only vector layers may be used...\n"
+              "Please select a vector layer first, \n"
+              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
+            return False
+        self.provider = self.layer.dataProvider()
+        if self.provider.geometryType() not in VALID_GEOMETRY_TYPES:
+            QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
+              "Wrong geometry type, only (multi-)polygons and (multi-)points may be used.\n"
+              "Please select a (multi-)polygon or (multi-)point layer first, \n"
+              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
+            return False
+        return True
+
     def writeHtml(self):
         # Create a holder for retrieving features from the provider
         feature = QgsFeature()
@@ -210,11 +234,12 @@ class ImageMapPlugin:
             html.append(u'\n<div id="himc-info-box" class="himc-hidden"></div>')
         if isLabelChecked:
             html.append(u'\n<div class="himc-title-box"></div>')
+            
         # Write necessary CSS content for corresponding features, namely "label" and "infoBox":
         html.append(u'\n<style type="text/css">\n')
         filename = "css.txt"
-        # Empty list as replacement parameter, because there are no replacements to be made in
-        # CSS templates
+        # Empty list as offset-replacement-parameter, because there are no replacements to be made.
+        # Reading in one CSS template:
         if onlyLabel:
             html.append(self.writeContent(LABEL_TEMPLATE_DIR, filename, []))
         elif onlyInfo:
@@ -265,6 +290,8 @@ class ImageMapPlugin:
         # If only one checkbox is checked, the required code for that feature (label/info box) alone is written
         html.append(u'\n<script type="text/javascript">\n')
         filename = "js.txt"
+        # List of replacement parameters for offset-placeholders governing label/info box
+        # Reading in one JavaScript template:
         if onlyLabel:
             html.append(self.writeContent(LABEL_TEMPLATE_DIR, filename, [self.label_offset]))
         elif onlyInfo:
@@ -285,8 +312,9 @@ class ImageMapPlugin:
         html.append(u'\n</body>\n</html>')
         return html
 
+
     # Returns a string representing the individual template's content and
-    # replaces offset-placeholders in the "js.txt" templates
+    # replaces offset-placeholders in the JavaScript templates
     def writeContent(self, dir, filename, offsets):
         content = ""
         f = codecs.open(u'{}/{}'.format(dir, filename), "r")
@@ -349,8 +377,13 @@ class ImageMapPlugin:
         self.canvas_width = painter.device().width()
         self.canvas_height = painter.device().height()
 
+    # SIGNAL slots:
     def setFilesPath(self, filesPathQString):
         self.files_path = filesPathQString
+
+    def setCurrentFilesPath(self, filesPathQString):
+        self.current_filename = filesPathQString
+        self.isReady()
 
     def setLayerName(self, layerNameQString):
         self.layer_name = layerNameQString
@@ -371,6 +404,10 @@ class ImageMapPlugin:
     def setLabelChecked(self, isChecked):
         self.label_checked = isChecked
 
+    def setCurrentLabelState(self, isChecked):
+        self.label_currently_checked = isChecked
+        self.isReady()
+
     def infoBoxAttributeFieldSet(self, attributeFieldQstring):
         self.infoBoxAttributeField = attributeFieldQstring
         self.info_field_index = self.layer.fieldNameIndex(attributeFieldQstring)
@@ -380,6 +417,10 @@ class ImageMapPlugin:
 
     def setInfoChecked(self, isChecked):
         self.info_checked = isChecked
+
+    def setCurrentInfoState(self, isChecked):
+        self.info_currently_checked = isChecked
+        self.isReady()
 
     def setSelectedOnly(self, selectedOnlyBool):
         self.selectedFeaturesOnly = selectedOnlyBool
@@ -437,6 +478,7 @@ class ImageMapPlugin:
             QMessageBox.information(self.iface.mainWindow(), self.MSG_BOX_TITLE, msg, QMessageBox.Ok)
             # Remember layer id:
             self.layer_id = self.layer.id()
+            self.current_filename = self.files_path
             self.imageMapPluginGui.hide()
         except IOError:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
