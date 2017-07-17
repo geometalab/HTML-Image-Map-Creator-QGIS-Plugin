@@ -20,7 +20,6 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
     def __init__(self, parent, fl):
         QDialog.__init__(self, parent, fl)
         self.setupUi(self)
-        self.setOkButtonState(False)
         self.label_components = [self.cmbLabelAttributes, self.lblLabelOffset, self.spinBoxLabel, self.lblLabelPixel]
         self.info_components = [self.cmbInfoBoxAttributes, self.lblInfoOffset, self.spinBoxInfo, self.lblInfoPixel]
 
@@ -35,7 +34,6 @@ class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
         self.emit(SIGNAL("getLayerName(QString)"), self.txtLayerName.text())
         # and GO
         self.emit(SIGNAL("go(QString)"), "ok")
-        self.setOkButtonState(False)
 
     def on_buttonBox_rejected(self):
         self.done(0)

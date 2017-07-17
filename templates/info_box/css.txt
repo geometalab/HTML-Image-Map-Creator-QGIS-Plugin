@@ -1,3 +1,6 @@
+#himc-container {
+    position: relative;
+}
 #himc-map-container {
     z-index: 0;
     position: relative;
@@ -28,7 +31,7 @@
     width: 0;
     z-index: 1;
     bottom: -15px;
-    left: 129px;
+    left: 120.5px;
 }
 .himc-visible {
     display: block;

@@ -5,12 +5,12 @@
             var LABEL_OFFSET = {0};
             
             function displayElementText(centerX, centerY, id) {
-                var titleBoxContainer = document.getElementsByClassName("himc-title-box")[0];
-                var titleBox = document.createElement("himc-title-box");
-                titleBox.className = "himc-title-box";
-                titleBox.innerHTML = labels[id];
-                titleBoxContainer.appendChild(titleBox);
-                styleElement(titleBox, (centerX - titleBox.offsetWidth / 2), (centerY + titleBox.offsetHeight));
+                var labelContainer = document.getElementsByClassName("himc-label")[0];
+                var label = document.createElement("himc-label");
+                label.className = "himc-label";
+                label.innerHTML = labels[id];
+                labelContainer.appendChild(label);
+                styleElement(label, centerX - (label.offsetWidth / 2), centerY);
             }
             
             function styleElement(element, left, top) {
@@ -21,7 +21,7 @@
             function getBoundingCenter(minX, maxX, minY, maxY) {
                 var x = parseInt((minX + maxX) / 2, 10);
                 var y = parseInt(maxY, 10) + LABEL_OFFSET;
-                return [x, y];
+                return {x: x, y: y};
             }
             
             function getAreaCenter(coords) {
@@ -58,7 +58,7 @@
                 var areas = document.querySelectorAll("area");
                 for (var i = 0; i < areas.length; i++) {
                     var centroid = utils.getAreaCenter(areas[i].getAttribute("coords"));
-                    utils.displayElementText(centroid[0], centroid[1], i);
+                    utils.displayElementText(centroid.x, centroid.y, i);
                 }
             };
             

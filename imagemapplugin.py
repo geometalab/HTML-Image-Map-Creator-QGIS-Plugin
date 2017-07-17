@@ -1,21 +1,18 @@
 """
 /***************************************************************************
-ImageMapPlugin
+HTML Image Map Plugin Creator
 
 This plugin generates a HTML image map file+img from the active point
 or polygon layer
 
-An adaptation of "imagemapplugin" by Richard Duivenvoorde.
-
-copyright            : (C) 2017 by Emil Sivro and Severin Fritschi
-email                : emil.sivro@hsr.ch | severin.fritschi@hsr.ch
- ***************************************************************************/
+Authors: Emil Sivro, Severin Fritschi, Richard Duivenvoorde
+***************************************************************************/
 
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
@@ -33,6 +30,7 @@ from imagemapplugingui import ImageMapPluginGui
 # Initialize Qt resources from file
 import imagemapplugin_rc
 import codecs
+import json
 
 # Constants
 VALID_GEOMETRY_TYPES = {
@@ -100,11 +98,11 @@ class ImageMapPlugin:
               "Please add at least one field in the attribute table for this layer\n"
               "and then restart the plugin."), QMessageBox.Ok, QMessageBox.Ok)
             return
-        # Construct GIO (using these fields)
-        # (In future modeless dialogs reuse this dialog)
+        # Construct GUI (using these fields)
         flags = Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMaximizeButtonHint  # QgisGui.ModalDialogFlags
         self.imageMapPluginGui = ImageMapPluginGui(self.iface.mainWindow(), flags)
         self.imageMapPluginGui.txtFileName.textChanged.connect(self.setCurrentFilesPath)
+        self.imageMapPluginGui.setOkButtonState(False)
         self.imageMapPluginGui.setAttributeFields(self.attr_fields)
         self.layerAttr = self.attr_fields
         self.selectedFeaturesOnly = False  # default: all features in current extent
@@ -129,7 +127,7 @@ class ImageMapPlugin:
         ]
         for code, slot in signals:
             QObject.connect(self.imageMapPluginGui, SIGNAL(code), slot)
-        # Reload GUI states
+        # Reload GUI states & check if it is 'ready'
         self.reloadGuiStates()
         # Set active layer name and expected image dimensions
         self.imageMapPluginGui.setLayerName(self.layer.name())
@@ -168,7 +166,6 @@ class ImageMapPlugin:
                 fields.append(field.name().strip())
         return fields
 
-        
     # Reloads states of GUI components from previous session
     def reloadGuiStates(self):
         self.imageMapPluginGui.setFilesPath(self.files_path)
@@ -187,6 +184,11 @@ class ImageMapPlugin:
             info_state = Qt.Checked if self.info_checked else Qt.Unchecked
             self.imageMapPluginGui.chkBoxLabel.setCheckState(label_state)
             self.imageMapPluginGui.chkBoxInfoBox.setCheckState(info_state)
+        else:
+            # When opened on a different layer, reset checkbox conditions:
+            self.label_currently_checked = False
+            self.info_currently_checked = False
+        self.isReady()
 
     def isLayerValid(self):
         if self.layer is None:
@@ -229,12 +231,7 @@ class ImageMapPlugin:
         onlyInfo = isInfoChecked and not isLabelChecked
         html.append(u'\n<head>\n<title>' + self.layer.name() +
                     '</title>\n<meta charset="UTF-8">\n</head>\n<body>')
-        html.append(u'\n<!-- BEGIN EXTRACTABLE CONTENT -->')
-        if isInfoChecked:
-            html.append(u'\n<div id="himc-info-box" class="himc-hidden"></div>')
-        if isLabelChecked:
-            html.append(u'\n<div class="himc-title-box"></div>')
-            
+        html.append(u'\n<p>Your text here...</p>')
         # Write necessary CSS content for corresponding features, namely "label" and "infoBox":
         html.append(u'\n<style type="text/css">\n')
         filename = "css.txt"
@@ -246,11 +243,15 @@ class ImageMapPlugin:
             html.append(self.writeContent(INFO_TEMPLATE_DIR, filename, []))
         else:
             html.append(self.writeContent(FULL_TEMPLATE_DIR, filename, []))
-        html.append(u'\n<br>')
+        html.append(u'\n<div id="himc-container">')
+        if isInfoChecked:
+            html.append(u'\n<div id="himc-info-box" class="himc-hidden"></div>')
+        if isLabelChecked:
+            html.append(u'\n<div class="himc-label"></div>')
         html.append(u'\n<img id="himc-map-container" src="' + imgfilename + '" ')
-        html.append(u'border="0" ismap="ismap" usemap="#mapmap" alt="html imagemap created with QGIS" >')
-        html.append(u'\n<map name="mapmap">\n')
-
+        html.append(u'border="0" ismap="ismap" usemap="#usemap" alt="HTML imagemap created with QGIS" >')
+        html.append(u'\n</div>')
+        html.append(u'\n<map name="usemap">\n')
         mapCanvasExtent = self.getTransformedMapCanvas()
         # Now iterate through each feature,
         # select features within current extent,
@@ -300,18 +301,17 @@ class ImageMapPlugin:
             html.append(self.writeContent(FULL_TEMPLATE_DIR, filename, [self.label_offset, self.info_offset]))
         # Dynamically write JavaScript array from field attribute list
         if self.labels:
-            html.append(u'\nvar labels = ["' + '", "'.join(self.labels) + '"];')
+            html.append(u'\nvar labels = [' + ', '.join(self.labels) + '];')
         if self.info_boxes:
-            html.append(u'\nvar infoBoxes = ["' + '", "'.join(self.info_boxes) + '"];')
+            html.append(u'\nvar infoBoxes = [' + ', '.join(self.info_boxes) + '];')
         # Clean up list afterwards
         del self.labels[:]
         del self.info_boxes[:]
         html.append(u'\n})();')
         html.append(u'\n</script>')
-        html.append(u'\n<!-- END EXTRACTABLE CONTENT -->')
+        html.append(u'\n<p>Your text here...</p>')
         html.append(u'\n</body>\n</html>')
         return html
-
 
     # Returns a string representing the individual template's content and
     # replaces offset-placeholders in the JavaScript templates
@@ -476,14 +476,14 @@ class ImageMapPlugin:
             self.iface.mapCanvas().saveAsImage(imgfilename)
             msg = "Files successfully saved to:\n" + self.files_path
             QMessageBox.information(self.iface.mainWindow(), self.MSG_BOX_TITLE, msg, QMessageBox.Ok)
-            # Remember layer id:
-            self.layer_id = self.layer.id()
-            self.current_filename = self.files_path
             self.imageMapPluginGui.hide()
         except IOError:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
               "Invalid path.\n"
               "Path does either not exist or is not writable."), QMessageBox.Ok, QMessageBox.Ok)
+        finally:
+            # Remember layer id:
+            self.layer_id = self.layer.id()
 
     def world2pixel(self, x, y, mupp, minx, maxy):
         pixX = (x - minx)/mupp
@@ -495,7 +495,7 @@ class ImageMapPlugin:
     # <area data-info-id=x shape="poly" coords=519,-52,519,..,-52,519,-52 alt=...>
     def ring2html(self, feature, ring, extent, extentAsPoly):
         param = u''
-        htm = u'<area data-info-id="{}" shape="poly" '.format(self.area_index)
+        html_tmp = u'<area data-info-id="{}" shape="poly" '.format(self.area_index)
         self.area_index = self.area_index + 1
         if hasattr(feature, 'attributeMap'):
             attrs = feature.attributeMap()
@@ -505,11 +505,11 @@ class ImageMapPlugin:
         # Escape ' and " because they will collapse as JavaScript parameter
         if self.imageMapPluginGui.isInfoBoxChecked():
             param = unicode(attrs[self.info_field_index])
-            self.info_boxes.append(self.removeNewLine(param))
+            self.info_boxes.append(json.dumps(param))
         if self.imageMapPluginGui.isLabelChecked():
             param = unicode(attrs[self.label_field_index])
-            self.labels.append(self.removeNewLine(param))
-        htm = htm + 'coords="'
+            self.labels.append(json.dumps(param))
+        html_tmp = html_tmp + 'coords="'
         lastPixel = [0, 0]
         insideExtent = False
         coordCount = 0
@@ -523,9 +523,9 @@ class ImageMapPlugin:
                            extent.xMinimum(), extent.yMaximum())
             if lastPixel != pixpoint:
                 coordCount = coordCount + 1
-                htm += (str(pixpoint[0]) + ',' + str(pixpoint[1]) + ',')
+                html_tmp += (str(pixpoint[0]) + ',' + str(pixpoint[1]) + ',')
                 lastPixel = pixpoint
-        htm = htm[0:-1]
+        html_tmp = html_tmp[0:-1]
         # Check if there are more than 2 coords: very small polygons on current map can have coordinates,
         # which if rounded to pixels all come to the same pixel, resulting in just ONE x,y coordinate.
         # We skip these:
@@ -538,9 +538,9 @@ class ImageMapPlugin:
         else:
             # Using last param (labels) as alt parameter (to be W3 compliant we need one).
             # If only info-boxes are selected, the area-index is used as an alternative
-            alt = self.removeNewLine(param) if self.imageMapPluginGui.isLabelChecked() else u'{}'.format(self.area_index)
-            htm += '" alt="' + alt + '">\n'
-            return unicode(htm)
+            alt = json.dumps(param) if self.imageMapPluginGui.isLabelChecked() else u'{}'.format(self.area_index)
+            html_tmp += '" alt=' + alt + '>\n'
+            return unicode(html_tmp)
 
     # Transforms the coordinates of the current map canvas extent, so that it can then be used
     # for geometric checks and as a filter
@@ -596,7 +596,3 @@ class ImageMapPlugin:
                     if mapCanvasExtent.intersects(rect):
                         count = count + 1
         return count
-
-    # Prevent new lines inside JavaScript array
-    def removeNewLine(self, str):
-        return "".join(str.split("\n"))

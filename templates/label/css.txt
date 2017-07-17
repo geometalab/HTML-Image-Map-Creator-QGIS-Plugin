@@ -1,8 +1,11 @@
+#himc-container {
+    position: relative;
+}
 #himc-map-container {
     z-index: 0;
     position: relative;
 }
-.himc-title-box {
+.himc-label {
     position: absolute;
     display: block;
     z-index: 15;

@@ -14,7 +14,7 @@ experimental=True
 ; start of optional metadata
 
 changelog:
-    0.4   (07-2017) Ok button states, fixed errors, refactoring
+    0.4   (07-2017) Ok button states, fixed errors, refactoring, improved templates
     0.3   (07-2017) Error handling, added multi-point compatibility, overall improvements
     0.2   (07-2017) Removed marker symbols, refactored code & templates
     0.1   (06-2017) Initial build

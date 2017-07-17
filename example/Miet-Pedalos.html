@@ -1,10 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Mietbote</title>
+<meta charset="UTF-8">
+</head>
+<body>
+<p>Your text here...</p>
+<style type="text/css">
+#himc-container {
+    position: relative;
+}
+#himc-map-container {
+    z-index: 0;
+    position: relative;
+}
+#himc-info-box {
+    position: absolute;
+    visibility: visible;
+    z-index: 50;
+    background-color: #FFFFFF;
+    width: 250px;
+    height: 114px;
+    padding: 10px;
+    margin: 0;
+    border-radius: 10px;
+    box-shadow: 4px 4px 2px 0 rgba(0, 0, 0, 0.75);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    line-height: 130%;
+    color: #5F5F5F;
+}
+#himc-info-box:after {
+    content: "";
+    position: absolute;
+    border-style: solid;
+    border-width: 15px 15px 0;
+    border-color: #FFFFFF transparent;
+    display: block;
+    width: 0;
+    z-index: 1;
+    bottom: -15px;
+    left: 120.5px;
+}
+.himc-visible {
+    display: block;
+}
+.himc-label {
+    position: absolute;
+    display: block;
+    z-index: 15;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: black;
+    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+    white-space: nowrap;
+}
+.himc-hidden {
+    display: none;
+}
+</style>
+<div id="himc-container">
+<div id="himc-info-box" class="himc-hidden"></div>
+<div class="himc-label"></div>
+<img id="himc-map-container" src="Miet-Pedalos.png" border="0" ismap="ismap" usemap="#usemap" alt="HTML imagemap created with QGIS" >
+</div>
+<map name="usemap">
+<area data-info-id="0" shape="poly" coords="433,473,433,475,432,477,432,479,430,480,429,482,427,483,425,483,423,483,421,483,419,483,418,482,416,480,415,479,414,477,413,475,413,473,413,471,414,470,415,468,416,466,418,465,419,464,421,464,423,463,425,464,427,464,429,465,430,466,432,468,432,470,433,471,433,473" alt=Pedalo Vermietung Ceccotorenas>
+<area data-info-id="1" shape="poly" coords="771,535,771,537,770,539,769,541,768,542,766,543,765,544,763,545,761,545,759,545,757,544,755,543,754,542,753,541,752,539,751,537,751,535,751,533,752,531,753,529,754,528,755,527,757,526,759,525,761,525,763,525,765,526,766,527,768,528,769,529,770,531,771,533,771,535" alt=Schiffahrtsbetrieb Hensa>
+<area data-info-id="2" shape="poly" coords="898,697,898,699,897,701,896,703,895,704,893,705,892,706,890,707,888,707,886,707,884,706,882,705,881,704,879,703,879,701,878,699,878,697,878,695,879,693,879,692,881,690,882,689,884,688,886,687,888,687,890,687,892,688,893,689,895,690,896,692,897,693,898,695,898,697" alt=G's Pier Lachen>
+<area data-info-id="3" shape="poly" coords="291,527,291,529,290,531,289,533,288,534,287,535,285,536,283,537,281,537,279,537,277,536,275,535,274,534,273,533,272,531,271,529,271,527,271,525,272,523,273,521,274,520,275,519,277,518,279,517,281,517,283,517,285,518,287,519,288,520,289,521,290,523,291,525,291,527" alt=NULL>
+<area data-info-id="4" shape="poly" coords="681,487,681,489,680,491,680,492,678,494,677,495,675,496,673,497,671,497,669,497,667,496,666,495,664,494,663,492,662,491,661,489,661,487,661,485,662,483,663,481,664,480,666,479,667,478,669,477,671,477,673,477,675,478,677,479,678,480,680,481,680,483,681,485,681,487" alt=Badi Feldbach>
+</map>
+<script type="text/javascript">
 (function () {
         "use strict";
 
         var utils = (function() {
             var boundingPrefs = {CENTER: 0, BOTTOM_CENTER: 1};
-            var LABEL_OFFSET = {0};
-            var INFO_OFFSET = {1};
+            var LABEL_OFFSET = 0;
+            var INFO_OFFSET = 0;
             
             function displayElementText(centerX, centerY, id) {
                 var labelContainer = document.getElementsByClassName("himc-label")[0];
@@ -107,3 +182,10 @@
             
             return { };
         })();
+var labels = ["Pedalo Vermietung Ceccotorenas", "Schiffahrtsbetrieb Hensa", "G's Pier Lachen", "NULL", "Badi Feldbach"];
+var infoBoxes = ["<b>Pedalo Vermietung Ceccotorenas</b><br><br>+41 76 383 66 58<br><a href =http://www.ceccotorenas.ch/>http://www.ceccotorenas.ch/</a><br>Tu-Fr 13:30-18:00, Sa-Su 10:00-18:00", "<b>Schiffahrtsbetrieb Hensa</b><br><br>055 220 67 22<br><a href =http://www.hensa-schifffahrt.ch>http://www.hensa-schifffahrt.ch</a><br>Mo-Su 09:00-20:00", "<b>G's Pier Lachen</b><br><br>+41 55 442 55 52<br><a href =www.gspier.com>www.gspier.com</a><br>10:00 - sunset", "None", "<b>Badi Feldbach</b><br><br>055 244 27 59<br><a href =https://www.badifeldbach.ch/>https://www.badifeldbach.ch/</a><br>Keine Öffnungszeiten"];
+})();
+</script>
+<p>Your text here...</p>
+</body>
+</html>

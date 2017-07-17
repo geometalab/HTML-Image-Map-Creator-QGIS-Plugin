@@ -6,7 +6,7 @@
 
             function getOffsets() {
                 var mapContainer = document.getElementById("himc-map-container");
-                return {"top": mapContainer.offsetTop, "left": mapContainer.offsetLeft};
+                return {top: mapContainer.offsetTop, left: mapContainer.offsetLeft};
             }
             
             function styleElement(element, left, top) {
@@ -17,7 +17,7 @@
             function getBoundingCenter(minX, maxX, minY, maxY) {
                 var x = parseInt((minX + maxX) / 2, 10);
                 var y = parseInt((minY + maxY) / 2, 10) + INFO_OFFSET;
-                return [x, y];
+                return {x: x, y: y};
             }
             
             function getAreaCenter(coords) {
@@ -54,7 +54,8 @@
             function displayBox(centerX, centerY, id) {
                 var infoBox = document.getElementById("himc-info-box");
                 infoBox.innerHTML = infoBoxes[id];
-                utils.styleElement(infoBox, centerX - infoBox.offsetWidth / 2, centerY - infoBox.offsetHeight - 15);
+                infoBox.className = "himc-visible";
+                utils.styleElement(infoBox, centerX - infoBox.offsetWidth / 2, (centerY - infoBox.offsetHeight - 15));
             }
 
             function hideBox() {
@@ -69,8 +70,10 @@
             document.addEventListener("click", function (e) {
                 if (e.target.tagName === "AREA") {
                     var centroid = utils.getAreaCenter(e.target.getAttribute("coords"));
-                    document.getElementById("himc-info-box").className = "himc-visible";
-                    box.display(centroid[0], centroid[1] + utils.getOffsets().top, Number(e.target.getAttribute("data-info-id")));
+                    var offsets = utils.getOffsets();
+                    var computedX = centroid.x + offsets.left;
+                    var computedY = centroid.y + offsets.top;
+                    box.display(computedX, computedY, Number(e.target.getAttribute("data-info-id")));
                 } else {
                     box.hide();
                 }
