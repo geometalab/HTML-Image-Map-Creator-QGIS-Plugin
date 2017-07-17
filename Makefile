@@ -1,6 +1,6 @@
 
 # install directory
-INST_DIR = ~/.qgis/python/plugins/imagemap_plugin
+INST_DIR = ~/.qgis/python/plugins/html_image_map_creator
 
 # python qt4 binaries
 PYRCC = /usr/bin/pyrcc4
@@ -8,15 +8,15 @@ PYUIC = /usr/bin/pyuic4
 
 # qt-ui input and py-output file
 # input (file is output of Qt-Designer)
-UI_UI_FILE = src/imagemapplugingui.ui
+UI_UI_FILE = src/html_image_map_creator_gui.ui
 # output
-UI_PY_FILE = src/ui_imagemapplugingui.py
+UI_PY_FILE = src/ui_html_image_map_creator_gui.py
 
 # resouce input and output file
 # input
-RC_QRC_FILE = src/resources.qrc
+RC_QRC_FILE = src/html_image_map_creator_resources.qrc
 # output
-RC_PY_FILE = src/imagemapplugin_rc.py
+RC_PY_FILE = src/html_image_map_creator_rc.py
 
 
 

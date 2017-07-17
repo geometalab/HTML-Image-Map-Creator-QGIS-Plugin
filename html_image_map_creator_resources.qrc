@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/" >
+        <file>html_image_map_creator.png</file>
+        <file>html_image_map_creator_icon.xpm</file>
+    </qresource>
+</RCC>

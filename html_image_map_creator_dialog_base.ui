@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ImageMapPluginGui</class>
- <widget class="QDialog" name="ImageMapPluginGui">
+ <class>HTMLImageMapCreatorGUI</class>
+ <widget class="QDialog" name="HTMLImageMapCreatorGUI">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -34,7 +34,7 @@
       <string/>
      </property>
      <property name="pixmap">
-      <pixmap resource="resources.qrc">:/imagemap.png</pixmap>
+      <pixmap resource="resources.qrc">:/html_image_map_creator.png</pixmap>
      </property>
     </widget>
    </item>
@@ -351,7 +351,7 @@ p, li { white-space: pre-wrap; }
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="resources.qrc"/>
+  <include location="html_image_map_creator_resources.qrc"/>
  </resources>
  <connections/>
 </ui>

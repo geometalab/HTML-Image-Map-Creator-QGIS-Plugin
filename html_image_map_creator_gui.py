@@ -7,12 +7,12 @@ from os.path import expanduser
 from qgis.core import QgsContextHelp
 from qgis.core import QgsApplication
 
-from ui_imagemapplugingui import Ui_ImageMapPluginGui
+from ui_html_image_map_creator_gui import Ui_HTMLImageMapCreatorGUI
 
-import imagemapplugin_rc
+import html_image_map_creator_rc
 
 
-class ImageMapPluginGui(QDialog, Ui_ImageMapPluginGui):
+class HTMLImageMapCreatorGUI(QDialog, Ui_HTMLImageMapCreatorGUI):
 
     PATH_STRING = "Path and filename (no extension)"
     MSG_BOX_TITLE = "QGIS HTML Image Map Creator"

@@ -1,22 +1,3 @@
-"""
-/***************************************************************************
-HTML Image Map Plugin Creator
-
-This plugin generates a HTML image map file+img from the active point
-or polygon layer
-
-Authors: Emil Sivro, Severin Fritschi, Richard Duivenvoorde
-***************************************************************************/
-
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 3 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
-"""
 import os
 
 from PyQt4 import QtGui
@@ -25,10 +6,10 @@ from PyQt4.QtGui import *
 
 from qgis.core import *
 
-from imagemapplugingui import ImageMapPluginGui
+from html_image_map_creator_gui import HTMLImageMapCreatorGUI
 
 # Initialize Qt resources from file
-import imagemapplugin_rc
+import html_image_map_creator_rc
 import codecs
 import json
 
@@ -46,7 +27,7 @@ INFO_TEMPLATE_DIR = u'{}/templates/info_box'.format(PLUGIN_PATH)
 POINT_AREA_BUFFER = 10  # (plus-minus 2x <constant> 20pixel areas)
 
 
-class ImageMapPlugin:
+class HTMLImageMapCreatorPlugin:
 
     MSG_BOX_TITLE = "QGIS HTML Image Map Creator "
 
@@ -63,7 +44,7 @@ class ImageMapPlugin:
 
     def initGui(self):
         # Create action that will start plugin configuration
-        self.action = QAction(QIcon(":/imagemapicon.xpm"), "Create map...", self.iface.mainWindow())
+        self.action = QAction(QIcon(":/html_image_map_creator_icon.xpm"), "Create map...", self.iface.mainWindow())
         self.action.setWhatsThis("Configuration for Image Map Creator")
         QObject.connect(self.action, SIGNAL("triggered()"), self.run)
         # Add toolbar button and menu item
@@ -100,10 +81,10 @@ class ImageMapPlugin:
             return
         # Construct GUI (using these fields)
         flags = Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMaximizeButtonHint  # QgisGui.ModalDialogFlags
-        self.imageMapPluginGui = ImageMapPluginGui(self.iface.mainWindow(), flags)
-        self.imageMapPluginGui.txtFileName.textChanged.connect(self.setCurrentFilesPath)
-        self.imageMapPluginGui.setOkButtonState(False)
-        self.imageMapPluginGui.setAttributeFields(self.attr_fields)
+        self.htmlImageMapCreatorGui = HTMLImageMapCreatorGUI(self.iface.mainWindow(), flags)
+        self.htmlImageMapCreatorGui.txtFileName.textChanged.connect(self.setCurrentFilesPath)
+        self.htmlImageMapCreatorGui.setOkButtonState(False)
+        self.htmlImageMapCreatorGui.setAttributeFields(self.attr_fields)
         self.layerAttr = self.attr_fields
         self.selectedFeaturesOnly = False  # default: all features in current extent
         # Catch SIGNALs
@@ -126,33 +107,33 @@ class ImageMapPlugin:
             ("setMapCanvasSize(int, int)", self.setMapCanvasSize),
         ]
         for code, slot in signals:
-            QObject.connect(self.imageMapPluginGui, SIGNAL(code), slot)
+            QObject.connect(self.htmlImageMapCreatorGui, SIGNAL(code), slot)
         # Reload GUI states & check if it is 'ready'
         self.reloadGuiStates()
         # Set active layer name and expected image dimensions
-        self.imageMapPluginGui.setLayerName(self.layer.name())
-        self.imageMapPluginGui.setFeatureTotal("<b>{}</b> features total".format(self.layer.featureCount()))
+        self.htmlImageMapCreatorGui.setLayerName(self.layer.name())
+        self.htmlImageMapCreatorGui.setFeatureTotal("<b>{}</b> features total".format(self.layer.featureCount()))
         canvas_width = self.iface.mapCanvas().width()
         canvas_height = self.iface.mapCanvas().height()
         dimensions = "width ~<b>{}</b> pixels, height ~<b>{}</b> pixels"
-        self.imageMapPluginGui.setDimensions(dimensions.format(canvas_width, canvas_height))
+        self.htmlImageMapCreatorGui.setDimensions(dimensions.format(canvas_width, canvas_height))
         # Set number of selected features
         selected_features = self.layer.selectedFeatureCount()
         selected_features_in_extent = self.nofSelectedFeaturesInExtent()
         if selected_features > 0 and selected_features_in_extent > 0:
-            self.imageMapPluginGui.chkBoxSelectedOnly.setEnabled(True)
-            self.imageMapPluginGui.featureCount.setEnabled(True)
+            self.htmlImageMapCreatorGui.chkBoxSelectedOnly.setEnabled(True)
+            self.htmlImageMapCreatorGui.featureCount.setEnabled(True)
         select_msg = "<b>{}</b> selected, of which <b>{}</b> from map view will be exported"
-        self.imageMapPluginGui.setFeatureCount(select_msg.format(selected_features, selected_features_in_extent))
-        self.imageMapPluginGui.show()
+        self.htmlImageMapCreatorGui.setFeatureCount(select_msg.format(selected_features, selected_features_in_extent))
+        self.htmlImageMapCreatorGui.show()
 
     # Enables Ok-button in GUI if conditions are met
     def isReady(self):
         if (self.current_filename and
            (self.label_currently_checked or self.info_currently_checked)):
-            self.imageMapPluginGui.setOkButtonState(True)
+            self.htmlImageMapCreatorGui.setOkButtonState(True)
         else:
-            self.imageMapPluginGui.setOkButtonState(False)
+            self.htmlImageMapCreatorGui.setOkButtonState(False)
 
     # Loads fields in attribute table to be listed in comboboxes
     def loadFields(self):
@@ -168,22 +149,22 @@ class ImageMapPlugin:
 
     # Reloads states of GUI components from previous session
     def reloadGuiStates(self):
-        self.imageMapPluginGui.setFilesPath(self.files_path)
+        self.htmlImageMapCreatorGui.setFilesPath(self.files_path)
         # Only reload states if the plugin is used on the same layer as before:
         if self.layer_id == self.layer.id():
             # Reload selected features in combo-boxes:
             if self.label_field_index < len(self.attr_fields):
-                self.imageMapPluginGui.cmbLabelAttributes.setCurrentIndex(self.label_field_index)
+                self.htmlImageMapCreatorGui.cmbLabelAttributes.setCurrentIndex(self.label_field_index)
             if self.info_field_index < len(self.attr_fields):
-                self.imageMapPluginGui.cmbInfoBoxAttributes.setCurrentIndex(self.info_field_index)
+                self.htmlImageMapCreatorGui.cmbInfoBoxAttributes.setCurrentIndex(self.info_field_index)
             # Reload spin-box values:
-            self.imageMapPluginGui.spinBoxLabel.setValue(self.label_offset)
-            self.imageMapPluginGui.spinBoxInfo.setValue(self.info_offset)
+            self.htmlImageMapCreatorGui.spinBoxLabel.setValue(self.label_offset)
+            self.htmlImageMapCreatorGui.spinBoxInfo.setValue(self.info_offset)
             # Reload check-box states:
             label_state = Qt.Checked if self.label_checked else Qt.Unchecked
             info_state = Qt.Checked if self.info_checked else Qt.Unchecked
-            self.imageMapPluginGui.chkBoxLabel.setCheckState(label_state)
-            self.imageMapPluginGui.chkBoxInfoBox.setCheckState(info_state)
+            self.htmlImageMapCreatorGui.chkBoxLabel.setCheckState(label_state)
+            self.htmlImageMapCreatorGui.chkBoxInfoBox.setCheckState(info_state)
         else:
             # When opened on a different layer, reset checkbox conditions:
             self.label_currently_checked = False
@@ -225,8 +206,8 @@ class ImageMapPlugin:
         temp = unicode(self.files_path+".png")
         imgfilename = os.path.basename(temp)
         html = [u'<!DOCTYPE HTML>\n<html>']
-        isLabelChecked = self.imageMapPluginGui.isLabelChecked()
-        isInfoChecked = self.imageMapPluginGui.isInfoBoxChecked()
+        isLabelChecked = self.htmlImageMapCreatorGui.isLabelChecked()
+        isInfoChecked = self.htmlImageMapCreatorGui.isInfoBoxChecked()
         onlyLabel = isLabelChecked and not isInfoChecked
         onlyInfo = isInfoChecked and not isLabelChecked
         html.append(u'\n<head>\n<title>' + self.layer.name() +
@@ -267,7 +248,7 @@ class ImageMapPlugin:
             request = QgsFeatureRequest().setFilterRect(mapCanvasExtent)
             for feature in self.layer.getFeatures(request):
                 count = count + 1
-        self.imageMapPluginGui.setProgressBarMax(count)
+        self.htmlImageMapCreatorGui.setProgressBarMax(count)
         progressValue = 0
         # In case of points / lines we need to buffer geometries, calculate bufferdistance here
         bufferDistance = self.iface.mapCanvas().mapUnitsPerPixel() * POINT_AREA_BUFFER
@@ -280,12 +261,12 @@ class ImageMapPlugin:
                 # In case of points / lines we need to buffer geometries (plus/minus 20px areas)
                 html.extend(self.handleGeom(feature, selectedFeaturesIds, self.doCrsTransform, bufferDistance))
                 progressValue = progressValue + 1
-                self.imageMapPluginGui.setProgressBarValue(progressValue)
+                self.htmlImageMapCreatorGui.setProgressBarValue(progressValue)
         else:   # QGIS >= 2.0
             for feature in self.layer.getFeatures(request):
                 html.extend(self.handleGeom(feature, selectedFeaturesIds, self.doCrsTransform, bufferDistance))
                 progressValue = progressValue + 1
-                self.imageMapPluginGui.setProgressBarValue(progressValue)
+                self.htmlImageMapCreatorGui.setProgressBarValue(progressValue)
         html.append(u'</map>')
         # Write necessary JavaScript content:
         # If only one checkbox is checked, the required code for that feature (label/info box) alone is written
@@ -476,7 +457,7 @@ class ImageMapPlugin:
             self.iface.mapCanvas().saveAsImage(imgfilename)
             msg = "Files successfully saved to:\n" + self.files_path
             QMessageBox.information(self.iface.mainWindow(), self.MSG_BOX_TITLE, msg, QMessageBox.Ok)
-            self.imageMapPluginGui.hide()
+            self.htmlImageMapCreatorGui.hide()
         except IOError:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
               "Invalid path.\n"
@@ -503,10 +484,10 @@ class ImageMapPlugin:
             # QGIS > 2.0
             attrs = feature
         # Escape ' and " because they will collapse as JavaScript parameter
-        if self.imageMapPluginGui.isInfoBoxChecked():
+        if self.htmlImageMapCreatorGui.isInfoBoxChecked():
             param = unicode(attrs[self.info_field_index])
             self.info_boxes.append(json.dumps(param))
-        if self.imageMapPluginGui.isLabelChecked():
+        if self.htmlImageMapCreatorGui.isLabelChecked():
             param = unicode(attrs[self.label_field_index])
             self.labels.append(json.dumps(param))
         html_tmp = html_tmp + 'coords="'
@@ -538,7 +519,7 @@ class ImageMapPlugin:
         else:
             # Using last param (labels) as alt parameter (to be W3 compliant we need one).
             # If only info-boxes are selected, the area-index is used as an alternative
-            alt = json.dumps(param) if self.imageMapPluginGui.isLabelChecked() else u'{}'.format(self.area_index)
+            alt = json.dumps(param) if self.htmlImageMapCreatorGui.isLabelChecked() else u'{}'.format(self.area_index)
             html_tmp += '" alt=' + alt + '>\n'
             return unicode(html_tmp)
 
