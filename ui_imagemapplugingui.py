@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'html_image_map_creator_dialog_base.ui'
 #
-# Created: Fri Jul 14 16:05:24 2017
+# Created: Mon Jul 17 09:45:17 2017
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,11 +26,16 @@ except AttributeError:
 class Ui_ImageMapPluginGui(object):
     def setupUi(self, ImageMapPluginGui):
         ImageMapPluginGui.setObjectName(_fromUtf8("ImageMapPluginGui"))
-        ImageMapPluginGui.resize(905, 428)
-        ImageMapPluginGui.setModal(True)
+        ImageMapPluginGui.resize(921, 441)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(ImageMapPluginGui.sizePolicy().hasHeightForWidth())
+        ImageMapPluginGui.setSizePolicy(sizePolicy)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         ImageMapPluginGui.setWindowIcon(icon)
+        ImageMapPluginGui.setModal(True)
         self.gridLayout = QtGui.QGridLayout(ImageMapPluginGui)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.label = QtGui.QLabel(ImageMapPluginGui)
@@ -202,7 +207,7 @@ class Ui_ImageMapPluginGui(object):
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:10pt;\">- It can be used on any active (multi-)point or (multi-)polygon vector layer (GeoPackage, Shapefile etc.).</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:10pt;\">- The label and the body of the infobox will use the chosen field (attribute) as their text. An example of this is shown in the picture on the left.</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:10pt;\">- The blue/orange arrows in the image indicate how the label and the infobox are moved from their anchor points, according to their offset values.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:10pt;\">- In the \"templates\" directory, you\'ll find the CSS/JS templates used in this plugin. Feel free to change them to suit your needs.</span></p></body></html>", None))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\'; font-size:10pt;\">- In the &quot;templates&quot; directory, you\'ll find the CSS/JS templates used in this plugin. Feel free to change them to suit your needs.</span></p></body></html>", None))
         self.lblLabelOffset.setText(_translate("ImageMapPluginGui", "Label offset", None))
         self.chkBoxSelectedOnly.setText(_translate("ImageMapPluginGui", "Selected features only", None))
         self.lblInfoOffset.setText(_translate("ImageMapPluginGui", "Infobox offset", None))
