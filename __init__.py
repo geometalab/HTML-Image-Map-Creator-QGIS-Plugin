@@ -9,8 +9,11 @@ def description():
 def qgisMinimumVersion():
     return "2.14.16"
 
+def qgisMaximumVersion():
+    return "2.99"
+
 def version():
-    return "0.4"
+    return "0.5"
 
 def author():
     return "geometalab"
