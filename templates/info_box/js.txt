@@ -50,12 +50,13 @@
         })();
         
         var box = (function() {
-        
+            var INFOBOX_POINTER_HEIGHT = 15;
+            
             function displayBox(centerX, centerY, id) {
                 var infoBox = document.getElementById("himc-info-box");
                 infoBox.innerHTML = infoBoxes[id];
                 infoBox.className = "himc-visible";
-                utils.styleElement(infoBox, centerX - (infoBox.offsetWidth / 2), centerY - infoBox.offsetHeight - 15);
+                utils.styleElement(infoBox, centerX - (infoBox.offsetWidth / 2), centerY - infoBox.offsetHeight - INFOBOX_POINTER_HEIGHT);
             }
 
             function hideBox() {

@@ -211,8 +211,7 @@ class HTMLImageMapCreatorPlugin:
         onlyLabel = isLabelChecked and not isInfoChecked
         onlyInfo = isInfoChecked and not isLabelChecked
         html.append(u'\n<head>\n<title>' + self.layer.name() +
-                    '</title>\n<meta charset="UTF-8">\n</head>\n<body>')
-        html.append(u'\n<p>Your text here...</p>')
+                    '</title>\n<meta charset="UTF-8">')
         # Write necessary CSS content for corresponding features, namely "label" and "infoBox":
         html.append(u'\n<style type="text/css">\n')
         filename = "css.txt"
@@ -224,6 +223,7 @@ class HTMLImageMapCreatorPlugin:
             html.append(self.writeContent(INFO_TEMPLATE_DIR, filename, []))
         else:
             html.append(self.writeContent(FULL_TEMPLATE_DIR, filename, []))
+        html.append(u'\n</head>\n<body>\n<p>Your text here...</p>')
         html.append(u'\n<div id="himc-container">')
         if isInfoChecked:
             html.append(u'\n<div id="himc-info-box" class="himc-hidden"></div>')
