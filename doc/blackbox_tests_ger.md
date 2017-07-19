@@ -20,7 +20,7 @@
 | **1.** | Labels und Infoboxen werden in der erstellten HTML-Datei korrekt angezeigt | - | :+1: |
 | **2.** | Labels und Infoboxen werden in der erstellten HTML-Datei korrekt angezeigt | - | :+1: |
 | **3.** | Labels und Infoboxen werden in der erstellten HTML-Datei korrekt angezeigt | - | :+1: |
-| **4.** | (QGis.WKBMultiPolygon) Alle Features im herangezoomten „MapView“ mitsamt Infobox und Labels exportieren | - | :+1: |
+| **4.** | Labels und Infoboxen werden in der erstellten HTML-Datei korrekt angezeigt | - | :+1: |
 | **5.** | Plugin wird auf Layer geöffnet mit einer ungültigen Geometrie | - | :+1: |
 | **6.** | Plugin wird auf leeren Layer geöffnet (kein Layer selektiert) | - | :+1: |
 | **7.** | Die 3 Dateien werden mit dem vom Benutzer gewählten Namen unter dem vom Nutzer gewählten Pfad exportiert | - | :+1: |
