@@ -1,0 +1,182 @@
+{
+  "type": "FeatureCollection",
+  "generator": "overpass-turbo (CH)",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "timestamp": "37073",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "node/356752345",
+      "properties": {
+        "@id": "node/356752345",
+        "amenity": "boat_rental",
+        "contact:phone": "+41 44 262 22 20",
+        "name": "LAGO -  Das nautische Zentrum Zürich",
+        "pedalboat_rental": "yes",
+        "website": "http://www.lago-zuerich.ch"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.5455549,
+          47.3639403
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/383931354",
+      "properties": {
+        "@id": "node/383931354",
+        "amenity": "boat_rental",
+        "contact:phone": "+41 76 383 66 58",
+        "name": "Pedalo Vermietung Ceccotorenas",
+        "opening_hours": "Tu-Fr 13:30-18:00, Sa-Su 10:00-18:00",
+        "pedalboat_rental": "yes",
+        "website": "http://www.ceccotorenas.ch/"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.7175744,
+          47.2389928
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4950484785",
+      "properties": {
+        "@id": "node/4950484785",
+        "amenity": "boat_rental",
+        "contact:phone": "055 220 67 22",
+        "name": "Schiffahrtsbetrieb Hensa",
+        "opening_hours": "Mo-Su 09:00-20:00",
+        "pedalboat_rental": "yes",
+        "website": "http://www.hensa-schifffahrt.ch"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.8145705,
+          47.2257818
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4950969614",
+      "properties": {
+        "@id": "node/4950969614",
+        "amenity": "boat_rental",
+        "contact:phone": "079 673 58 38",
+        "name": "Bootsvermietung Rytz+Kreuzer",
+        "pedalboat_rental": "yes",
+        "website": "http://bootsvermietung-seefeld.ch/pedalo/"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.5471234,
+          47.360624
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4952465429",
+      "properties": {
+        "@id": "node/4952465429",
+        "amenity": "boat_rental",
+        "contact:phone": "+41 55 442 55 52",
+        "name": "G's Pier Lachen",
+        "opening_hours": "10:00 - sunset",
+        "pedalboat_rental": "yes",
+        "website": "www.gspier.com"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.8502989,
+          47.193525
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4952465431",
+      "properties": {
+        "@id": "node/4952465431",
+        "amenity": "boat_rental",
+        "contact:phone": "+41 44 261 70 55",
+        "name": "Pier 7",
+        "pedalboat_rental": "yes",
+        "website": "www.pier7.ch"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.543626,
+          47.3677838
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4959040721",
+      "properties": {
+        "@id": "node/4959040721",
+        "amenity": "boat_rental",
+        "contact:phone": "+41 44 780 16 66",
+        "operator": "Aruna GmbH MS Glärnisch",
+        "pedalboat_rental": "yes"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.6763275,
+          47.228911
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4961249010",
+      "properties": {
+        "@id": "node/4961249010",
+        "amenity": "boat_rental",
+        "contact:phone": "+41 44 211 2262",
+        "name": "Bootsvermietung Enge",
+        "opening_hours": "Mo-Sa 10:00-20:30",
+        "pedalboat_rental": "yes",
+        "website": "http://www.bootsvermietung-zuerich.ch"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.536281,
+          47.3612724
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4961460153",
+      "properties": {
+        "@id": "node/4961460153",
+        "amenity": "boat_rental",
+        "contact:phone": "055 244 27 59",
+        "name": "Badi Feldbach",
+        "pedalboat_rental": "yes",
+        "website": "https://www.badifeldbach.ch/"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.7889674,
+          47.2355411
+        ]
+      }
+    }
+  ]
+}
