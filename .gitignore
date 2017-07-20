@@ -2,3 +2,5 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+doc/blackbox_tests_ger.md
