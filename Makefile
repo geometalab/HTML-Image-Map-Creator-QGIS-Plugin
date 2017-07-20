@@ -16,7 +16,7 @@ UI_PY_FILE = src/ui_html_image_map_creator_gui.py
 # input
 RC_QRC_FILE = src/html_image_map_creator_resources.qrc
 # output
-RC_PY_FILE = src/html_image_map_creator_rc.py
+RC_PY_FILE = src/html_image_map_creator_resources_rc.py
 
 
 
