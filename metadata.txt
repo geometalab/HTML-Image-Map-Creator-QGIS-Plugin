@@ -8,8 +8,8 @@ qgisMinimumVersion:2.14.16
 qgisMaximumVersion:2.99
 description:This plugin creates a static image map (HTML5/CSS/JavaScript) with interactive features
 about:The output will be an HTML file along with a corresponding PNG file taken from the current map view.
-version:0.5
-experimental=True
+version:1.0
+experimental=False
 
 ; end of mandatory metadata
 
@@ -17,6 +17,7 @@ experimental=True
 ; start of optional metadata
 
 changelog:
+    1.0   (07-2017) Published build
     0.5   (07-2017) Tested release build
     0.4   (07-2017) Ok button states, fixed errors, refactoring, improved templates
     0.3   (07-2017) Error handling, added multi-point compatibility, overall improvements

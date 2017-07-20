@@ -4,7 +4,7 @@ def name():
     return "HTML Image Map Creator"
 
 def description():
-    return "This plugin generates a HTML image map from the active point or polygon layer"
+    return "This plugin creates a static image map (HTML5/CSS/JavaScript) with interactive features"
 
 def qgisMinimumVersion():
     return "2.14.16"
@@ -13,7 +13,7 @@ def qgisMaximumVersion():
     return "2.99"
 
 def version():
-    return "0.5"
+    return "1.0"
 
 def author():
     return "geometalab"
