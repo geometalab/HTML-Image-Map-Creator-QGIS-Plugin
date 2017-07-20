@@ -221,4 +221,4 @@ class Ui_HTMLImageMapCreatorGUI(object):
         self.lblLabelPixel.setText(_translate("HTMLImageMapCreatorGUI", "pixels", None))
         self.lblInfoPixel.setText(_translate("HTMLImageMapCreatorGUI", "pixels", None))
 
-import html_image_map_creator_rc
+import html_image_map_creator_resources_rc
