@@ -8,6 +8,8 @@ Websites:
 This plugin is a derivative work of @rduivenvoorde 's "imagemapplugin" QGIS plugin.
 
 ## Installation 
+The plugin can be downloaded inside of QGIS by using the built-in plugin manager.
+
 Download the zip file of this repo, unpack it into this directory "%userprofile%/.qgis2/python/plugins" 
 using the plugin folder name "html_image_map_creator". 
 
