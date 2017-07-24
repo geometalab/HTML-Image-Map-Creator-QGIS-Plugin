@@ -5,7 +5,6 @@ name:HTML Image Map Creator
 author:geometalab
 email:geometalab@gmail.com
 qgisMinimumVersion:2.14.16
-qgisMaximumVersion:2.99
 description:This plugin creates a static image map (HTML5/CSS/JavaScript) with interactive features
 about:The output will be an HTML file along with a corresponding PNG file taken from the current map view.
 version:1.0
