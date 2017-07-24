@@ -2,7 +2,7 @@
 
 Websites:
 * User homepage: https://giswiki.hsr.ch/HTML_Image_Map_Creator_QGIS_Plugin
-* Plugin homepage: http://plugins.qgis.org/plugins/HTML-Image-Map-Creator/
+* Plugin homepage: http://plugins.qgis.org/plugins/html-image-map-creator/
 
 ## Reference
 This plugin is a derivative work of @rduivenvoorde 's "imagemapplugin" QGIS plugin.
