@@ -9,9 +9,6 @@ def description():
 def qgisMinimumVersion():
     return "2.14.16"
 
-def qgisMaximumVersion():
-    return "2.99"
-
 def version():
     return "1.0"
 
