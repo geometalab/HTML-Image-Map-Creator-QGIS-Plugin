@@ -1,6 +1,6 @@
 
 # install directory
-INST_DIR = ~/.qgis/python/plugins/html_image_map_creator
+INST_DIR = ~/.local/share/QGIS/QGIS3/profiles/default/python/html_image_map_creator
 
 # python qt4 binaries
 PYRCC = /usr/bin/pyrcc4
@@ -8,15 +8,15 @@ PYUIC = /usr/bin/pyuic4
 
 # qt-ui input and py-output file
 # input (file is output of Qt-Designer)
-UI_UI_FILE = src/html_image_map_creator_gui.ui
+UI_UI_FILE = html_image_map_creator_gui.ui
 # output
-UI_PY_FILE = src/ui_html_image_map_creator_gui.py
+UI_PY_FILE = ui_html_image_map_creator_gui.py
 
 # resouce input and output file
 # input
-RC_QRC_FILE = src/html_image_map_creator_resources.qrc
+RC_QRC_FILE = html_image_map_creator_rc.qrc
 # output
-RC_PY_FILE = src/html_image_map_creator_rc.py
+RC_PY_FILE = html_image_map_creator_rc.py
 
 
 
@@ -36,6 +36,7 @@ dist: cleandist
 	cp *.* dist/html_image_map_creator
 	cp doc/*.* dist/html_image_map_creator/doc/
 	rm -f bin/html_image_map_creator.zip
+	mkdir dist/bin
 	cd dist; zip -9rv bin/html_image_map_creator.zip  html_image_map_creator
 
 cleandist:
@@ -44,13 +45,13 @@ cleandist:
 # install (depends on 'all')
 install: all
 	mkdir -p $(INST_DIR)/doc
-	cp src/*.py $(INST_DIR)/
-	cp -r src/doc/* $(INST_DIR)/doc/
+	cp *.py $(INST_DIR)/
+	cp -r doc/* $(INST_DIR)/doc/
 
 clean:
 	killall qgis
 	rm -f $(RC_PY_FILE) $(UI_PY_FILE)
-	rm -f src/*.pyc
+	rm -f *.pyc
 	# clean up install directory
 	rm -rf $(INST_DIR)
 

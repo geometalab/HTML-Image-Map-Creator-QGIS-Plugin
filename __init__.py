@@ -7,10 +7,10 @@ def description():
     return "This plugin creates a static image map (HTML5/CSS/JavaScript) with interactive features"
 
 def qgisMinimumVersion():
-    return "2.14.16"
+    return "3.0.0"
 
 def version():
-    return "1.0"
+    return "1.1"
 
 def author():
     return "geometalab"
