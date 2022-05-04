@@ -7,7 +7,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from qgis.PyQt import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -220,5 +220,3 @@ class Ui_HTMLImageMapCreatorGUI(object):
         self.lblDimensions.setText(_translate("HTMLImageMapCreatorGUI", "Map view size", None))
         self.lblLabelPixel.setText(_translate("HTMLImageMapCreatorGUI", "pixels", None))
         self.lblInfoPixel.setText(_translate("HTMLImageMapCreatorGUI", "pixels", None))
-
-import html_image_map_creator_rc

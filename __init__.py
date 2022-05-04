@@ -1,5 +1,3 @@
-from html_image_map_creator_plugin import HTMLImageMapCreatorPlugin
-
 def name():
     return "HTML Image Map Creator"
 
@@ -22,5 +20,6 @@ def category():
   return "Web"
 
 def classFactory(iface):
+    from .html_image_map_creator_plugin import HTMLImageMapCreatorPlugin
     return HTMLImageMapCreatorPlugin(iface)
 

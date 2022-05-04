@@ -1,24 +1,31 @@
 import os
 
-from PyQt4 import QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+import qgis
+from PyQt5.QtWidgets import QMessageBox
+from PySide6.QtCore import SIGNAL
+from numpy.compat import unicode
+from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt import QtGui
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
 
 from qgis.core import *
+from qgis.utils import *
+from qgis.core import QgsWkbTypes
 
-from html_image_map_creator_gui import HTMLImageMapCreatorGUI
+from .html_image_map_creator_gui import HTMLImageMapCreatorGUI
 
 # Initialize Qt resources from file
-import html_image_map_creator_rc
 import codecs
 import json
 
 # Constants
 VALID_GEOMETRY_TYPES = {
-    QGis.WKBPoint,
-    QGis.WKBMultiPoint,
-    QGis.WKBPolygon,
-    QGis.WKBMultiPolygon
+    QgsWkbTypes.Type.Point,
+    QgsWkbTypes.Type.MultiPoint,
+    QgsWkbTypes.Type.Polygon,
+    QgsWkbTypes.Type.MultiPolygon
+
 }
 PLUGIN_PATH = os.path.dirname(__file__)
 FULL_TEMPLATE_DIR = u'{}/templates/full'.format(PLUGIN_PATH)
@@ -28,7 +35,6 @@ POINT_AREA_BUFFER = 10  # (plus-minus 2x <constant> 20pixel areas)
 
 
 class HTMLImageMapCreatorPlugin:
-
     MSG_BOX_TITLE = "QGIS HTML Image Map Creator "
 
     def __init__(self, iface):
@@ -75,9 +81,9 @@ class HTMLImageMapCreatorPlugin:
         self.attr_fields = self.loadFields()
         if not self.attr_fields:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "No fields in attribute table\n"
-              "Please add at least one field in the attribute table for this layer\n"
-              "and then restart the plugin."), QMessageBox.Ok, QMessageBox.Ok)
+                "No fields in attribute table\n"
+                "Please add at least one field in the attribute table for this layer\n"
+                "and then restart the plugin."), QMessageBox.Ok, QMessageBox.Ok)
             return
         # Construct GUI (using these fields)
         flags = Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMaximizeButtonHint  # QgisGui.ModalDialogFlags
@@ -130,7 +136,7 @@ class HTMLImageMapCreatorPlugin:
     # Enables Ok-button in GUI if conditions are met
     def isReady(self):
         if (self.current_filename and
-           (self.label_currently_checked or self.info_currently_checked)):
+                (self.label_currently_checked or self.info_currently_checked)):
             self.htmlImageMapCreatorGui.setOkButtonState(True)
         else:
             self.htmlImageMapCreatorGui.setOkButtonState(False)
@@ -174,36 +180,36 @@ class HTMLImageMapCreatorPlugin:
     def isLayerValid(self):
         if self.layer is None:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "No active layer found\n"
-              "Please select a (multi-)polygon or (multi-)point layer first, \n"
-              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
+                "No active layer found\n"
+                "Please select a (multi-)polygon or (multi-)point layer first, \n"
+                "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
             return False
         # Don't know if this is possible / needed
         if not self.layer.isValid():
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "No VALID layer found\n"
-              "Please select a valid (multi-)polygon or (multi-)point layer first, \n"
-              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
+                "No VALID layer found\n"
+                "Please select a valid (multi-)polygon or (multi-)point layer first, \n"
+                "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
             return False
         if (self.layer.type() > 0):  # 0 = vector, 1 = raster
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "Wrong layer type, only vector layers may be used...\n"
-              "Please select a vector layer first, \n"
-              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
+                "Wrong layer type, only vector layers may be used...\n"
+                "Please select a vector layer first, \n"
+                "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
             return False
         self.provider = self.layer.dataProvider()
         if self.provider.geometryType() not in VALID_GEOMETRY_TYPES:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "Wrong geometry type, only (multi-)polygons and (multi-)points may be used.\n"
-              "Please select a (multi-)polygon or (multi-)point layer first, \n"
-              "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
+                "Wrong geometry type, only (multi-)polygons and (multi-)points may be used.\n"
+                "Please select a (multi-)polygon or (multi-)point layer first, \n"
+                "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
             return False
         return True
 
     def writeHtml(self):
         # Create a holder for retrieving features from the provider
         feature = QgsFeature()
-        temp = unicode(self.files_path+".png")
+        temp = unicode(self.files_path + ".png")
         imgfilename = os.path.basename(temp)
         html = [u'<!DOCTYPE HTML>\n<html>']
         isLabelChecked = self.htmlImageMapCreatorGui.isLabelChecked()
@@ -262,7 +268,7 @@ class HTMLImageMapCreatorPlugin:
                 html.extend(self.handleGeom(feature, selectedFeaturesIds, self.doCrsTransform, bufferDistance))
                 progressValue = progressValue + 1
                 self.htmlImageMapCreatorGui.setProgressBarValue(progressValue)
-        else:   # QGIS >= 2.0
+        else:  # QGIS >= 2.0
             for feature in self.layer.getFeatures(request):
                 html.extend(self.handleGeom(feature, selectedFeaturesIds, self.doCrsTransform, bufferDistance))
                 progressValue = progressValue + 1
@@ -317,33 +323,33 @@ class HTMLImageMapCreatorPlugin:
                 geom.transform(self.crsTransform)
             else:
                 QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-                  "Cannot crs-transform geometry in your version of QGIS ...\n"
-                  "Only QGIS version 1.5 and above can transform geometries on the fly\n"
-                  "As a workaround, you can try to save the layer in the destination crs\n"
-                  "(eg as shapefile) and reload that layer...\n"), QMessageBox.Ok, QMessageBox.Ok)
+                    "Cannot crs-transform geometry in your version of QGIS ...\n"
+                    "Only QGIS version 1.5 and above can transform geometries on the fly\n"
+                    "As a workaround, you can try to save the layer in the destination crs\n"
+                    "(eg as shapefile) and reload that layer...\n"), QMessageBox.Ok, QMessageBox.Ok)
                 raise Exception("Cannot crs-transform geometry in your QGIS version ...\n"
-                  "Only QGIS version 1.5 and above can transform geometries on the fly\n"
-                  "As a workaround, you can try to save the layer in the destination crs\n"
-                  "(e.g. as Shapefile) and reload that layer...\n")
+                                "Only QGIS version 1.5 and above can transform geometries on the fly\n"
+                                "As a workaround, you can try to save the layer in the destination crs\n"
+                                "(e.g. as Shapefile) and reload that layer...\n")
         projectExtent = self.iface.mapCanvas().extent()
         projectExtentAsPolygon = QgsGeometry()
         projectExtentAsPolygon = QgsGeometry.fromRect(projectExtent)
-        if geom.wkbType() == QGis.WKBPoint:  # 1 = WKBPoint
+        if geom.wkbType() == QgsWkbTypes.Type.Point:  # 1 = WKBPoint
             # We make a copy of the geom, because apparently buffering the original will
             # only buffer the source-coordinates
             geomCopy = QgsGeometry.fromPoint(geom.asPoint())
             polygon = geomCopy.buffer(bufferDistance, 0).asPolygon()
             html.append(self.polygon2html(feature, projectExtent, projectExtentAsPolygon, polygon))
-        if geom.wkbType() == QGis.WKBMultiPoint:  # 4 = WKBMultiPoint
+        if geom.wkbType() == QgsWkbTypes.Type.MultiPoint:  # 4 = WKBMultiPoint
             multipoint = geom.asMultiPoint()
             for point in multipoint:  # returns a list
                 geomCopy = QgsGeometry.fromPoint(point)
                 polygon = geomCopy.buffer(bufferDistance, 0).asPolygon()
                 html.append(self.polygon2html(feature, projectExtent, projectExtentAsPolygon, polygon))
-        if geom.wkbType() == QGis.WKBPolygon:  # 3 = WKBPolygon:
+        if geom.wkbType() == QgsWkbTypes.Type.Polygon:  # 3 = WKBPolygon:
             polygon = geom.asPolygon()  # returns a list
             html.append(self.polygon2html(feature, projectExtent, projectExtentAsPolygon, polygon))
-        if geom.wkbType() == QGis.WKBMultiPolygon:  # 6 = WKBMultiPolygon:
+        if geom.wkbType() == QgsWkbTypes.Type.MultiPolygon:  # 6 = WKBMultiPolygon:
             multipolygon = geom.asMultiPolygon()  # returns a list
             for polygon in multipolygon:
                 html.append(self.polygon2html(feature, projectExtent, projectExtentAsPolygon, polygon))
@@ -416,12 +422,12 @@ class HTMLImageMapCreatorPlugin:
         if not parent.parentWidget() is None:
             parent = parent.parentWidget()
         # Some QT magic for me, coming from maximized, force a minimal layout change first
-        if(parent.isMaximized()):
+        if (parent.isMaximized()):
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "Maximized QGIS window..\n"
-              "QGIS window is maximized, plugin will try to de-maximize the window.\n"
-              "If image size is still not exact what you asked for,\n"
-              "try starting plugin with non maximized window."), QMessageBox.Ok, QMessageBox.Ok)
+                "Maximized QGIS window..\n"
+                "QGIS window is maximized, plugin will try to de-maximize the window.\n"
+                "If image size is still not exact what you asked for,\n"
+                "try starting plugin with non maximized window."), QMessageBox.Ok, QMessageBox.Ok)
             parent.showNormal()
         diffWidth = mapCanvas.size().width() - newWidth
         diffHeight = mapCanvas.size().height() - newHeight
@@ -441,8 +447,8 @@ class HTMLImageMapCreatorPlugin:
         imgfilename = unicode(self.files_path + ".png")
         if os.path.isfile(htmlfilename) or os.path.isfile(imgfilename):
             if QMessageBox.question(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "There is already a filename with this name.\n" "Continue?"),
-              QMessageBox.Cancel, QMessageBox.Ok) == QMessageBox.Cancel:
+                    "There is already a filename with this name.\n" "Continue?"),
+                                    QMessageBox.Cancel, QMessageBox.Ok) == QMessageBox.Cancel:
                 return
         # Else: everthing ok: start writing img and html
         try:
@@ -460,15 +466,15 @@ class HTMLImageMapCreatorPlugin:
             self.htmlImageMapCreatorGui.hide()
         except IOError:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
-              "Invalid path.\n"
-              "Path does either not exist or is not writable."), QMessageBox.Ok, QMessageBox.Ok)
+                "Invalid path.\n"
+                "Path does either not exist or is not writable."), QMessageBox.Ok, QMessageBox.Ok)
         finally:
             # Remember layer id:
             self.layer_id = self.layer.id()
 
     def world2pixel(self, x, y, mupp, minx, maxy):
-        pixX = (x - minx)/mupp
-        pixY = (y - maxy)/mupp
+        pixX = (x - minx) / mupp
+        pixY = (y - maxy) / mupp
         return [int(pixX), int(-pixY)]
 
     # For given ring in feature, IF at least one point in ring is in 'mapCanvasExtent',
@@ -500,8 +506,8 @@ class HTMLImageMapCreatorPlugin:
             if extentAsPoly.contains(point):
                 insideExtent = True
             pixpoint = self.world2pixel(point.x(), point.y(),
-                           self.iface.mapCanvas().mapUnitsPerPixel(),
-                           extent.xMinimum(), extent.yMaximum())
+                                        self.iface.mapCanvas().mapUnitsPerPixel(),
+                                        extent.xMinimum(), extent.yMaximum())
             if lastPixel != pixpoint:
                 coordCount = coordCount + 1
                 html_tmp += (str(pixpoint[0]) + ',' + str(pixpoint[1]) + ',')
@@ -553,14 +559,14 @@ class HTMLImageMapCreatorPlugin:
 
     # Returns a list of bounding boxes, which represents the original geometries
     def geom2rect(self, geom):
-        if geom.wkbType() == QGis.WKBPoint:  # 1 = WKBPoint
+        if geom.wkbType() == QgsWkbTypes.Type.Point:  # 1 = WKBPoint
             return [geom.boundingBox()]
-        if geom.wkbType() == QGis.WKBMultiPoint:  # 4 = WKBMultiPoint
+        if geom.wkbType() == QgsWkbTypes.Type.MultiPoint:  # 4 = WKBMultiPoint
             multipoint = geom.asMultiPoint()
             return [geom.boundingBox() for point in multipoint]
-        if geom.wkbType() == QGis.WKBPolygon:  # 3 = WKBPolygon:
+        if geom.wkbType() == QgsWkbTypes.Type.Polygon:  # 3 = WKBPolygon:
             return [geom.boundingBox()]
-        if geom.wkbType() == QGis.WKBMultiPolygon:  # 6 = WKBMultiPolygon:
+        if geom.wkbType() == QgsWkbTypes.Type.MultiPolygon:  # 6 = WKBMultiPolygon:
             multipolygon = geom.asMultiPolygon()
             return [geom.boundingBox() for polygon in multipolygon]
 

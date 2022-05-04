@@ -1,19 +1,16 @@
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PySide6.QtCore import SIGNAL
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QDialogButtonBox
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
 
 import os.path
 from os.path import expanduser
 
-from qgis.core import QgsContextHelp
 from qgis.core import QgsApplication
-
-from ui_html_image_map_creator_gui import Ui_HTMLImageMapCreatorGUI
-
-import html_image_map_creator_rc
+from .ui_html_image_map_creator_gui import Ui_HTMLImageMapCreatorGUI
 
 
 class HTMLImageMapCreatorGUI(QDialog, Ui_HTMLImageMapCreatorGUI):
-
     PATH_STRING = "Path and filename (no extension)"
     MSG_BOX_TITLE = "QGIS HTML Image Map Creator"
 
@@ -58,7 +55,7 @@ class HTMLImageMapCreatorGUI(QDialog, Ui_HTMLImageMapCreatorGUI):
 
     # See http://www.riverbankcomputing.com/Docs/PyQt4/pyqt4ref.html#connecting-signals-and-slots
     # Without this magic, the on_btnOk_clicked will be called two times: one clicked() and one clicked(bool checked)
-    @pyqtSignature("on_btnBrowse_clicked()")
+    # @pyqtSlot("on_btnBrowse_clicked()")
     def on_btnBrowse_clicked(self):
         current_file_name = ""
         # Remember previously browsed directories
