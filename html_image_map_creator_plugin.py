@@ -21,11 +21,11 @@ import json
 
 # Constants
 VALID_GEOMETRY_TYPES = {
-    QgsWkbTypes.Type.Point,
-    QgsWkbTypes.Type.MultiPoint,
-    QgsWkbTypes.Type.Polygon,
-    QgsWkbTypes.Type.MultiPolygon
-
+    1, # QgsWkbTypes.Point,
+    4, # QgsWkbTypes.MultiPoint,
+    3, # QgsWkbTypes.Polygon,
+    6, # QgsWkbTypes.MultiPolygon
+    # See https://api.qgis.org/api/3.18/classQgsWkbTypes.html
 }
 PLUGIN_PATH = os.path.dirname(__file__)
 FULL_TEMPLATE_DIR = u'{}/templates/full'.format(PLUGIN_PATH)
@@ -35,6 +35,9 @@ POINT_AREA_BUFFER = 10  # (plus-minus 2x <constant> 20pixel areas)
 
 
 class HTMLImageMapCreatorPlugin:
+    triggered = pyqtSignal(str)
+    renderComplete = pyqtSignal(QPainter)
+
     MSG_BOX_TITLE = "QGIS HTML Image Map Creator "
 
     def __init__(self, iface):
@@ -52,7 +55,7 @@ class HTMLImageMapCreatorPlugin:
         # Create action that will start plugin configuration
         self.action = QAction(QIcon(":/html_image_map_creator_icon.xpm"), "Create map...", self.iface.mainWindow())
         self.action.setWhatsThis("Configuration for Image Map Creator")
-        QObject.connect(self.action, SIGNAL("triggered()"), self.run)
+        self.action.triggered.connect(self.run)
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.action)
         if hasattr(self.iface, "addPluginToWebMenu"):
@@ -60,7 +63,8 @@ class HTMLImageMapCreatorPlugin:
         else:
             self.iface.addPluginToMenu("&HTML Image Map Creator", self.action)
         # Connect to signal renderComplete which is emitted when canvas rendering is done
-        QObject.connect(self.iface.mapCanvas(), SIGNAL("renderComplete(QPainter *)"), self.renderTest)
+        # QObject.connect(self.iface.mapCanvas(), SIGNAL("renderComplete(QPainter *)"), self.renderTest)
+        self.iface.mapCanvas().renderComplete.connect(self.renderTest)
 
     def unload(self):
         # Remove the plugin menu item and icon
@@ -70,7 +74,7 @@ class HTMLImageMapCreatorPlugin:
             self.iface.removePluginMenu("&HTML Image Map Creator", self.action)
         self.iface.removeToolBarIcon(self.action)
         # Disconnect from canvas signal
-        QObject.disconnect(self.iface.mapCanvas(), SIGNAL("renderComplete(QPainter *)"), self.renderTest)
+        self.iface.mapCanvas().renderComplete.disconnect()
 
     def run(self):
         # Check if active layer is a polygon layer:
@@ -144,7 +148,7 @@ class HTMLImageMapCreatorPlugin:
     # Loads fields in attribute table to be listed in comboboxes
     def loadFields(self):
         fields = []
-        pending_fields = self.layer.pendingFields()
+        pending_fields = self.layer.fields()
         if hasattr(pending_fields, 'iteritems'):
             for (i, field) in pending_fields.iteritems():
                 fields.append(field.name().trimmed())
@@ -197,8 +201,9 @@ class HTMLImageMapCreatorPlugin:
                 "Please select a vector layer first, \n"
                 "by selecting it in the legend."), QMessageBox.Ok, QMessageBox.Ok)
             return False
-        self.provider = self.layer.dataProvider()
-        if self.provider.geometryType() not in VALID_GEOMETRY_TYPES:
+        wkb_type = self.layer.wkbType()
+        print(str(wkb_type))
+        if wkb_type not in VALID_GEOMETRY_TYPES:
             QMessageBox.warning(self.iface.mainWindow(), self.MSG_BOX_TITLE, (
                 "Wrong geometry type, only (multi-)polygons and (multi-)points may be used.\n"
                 "Please select a (multi-)polygon or (multi-)point layer first, \n"
