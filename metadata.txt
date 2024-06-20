@@ -1,28 +1,31 @@
-;the next section is mandatory
+# Mandatory items:
 
 [general]
-name:HTML Image Map Creator
-author:geometalab
-email:geometalab@gmail.com
-qgisMinimumVersion:2.14.16
-description:This plugin creates a static image map (HTML5/CSS/JavaScript) with interactive features
-about:The output will be an HTML file along with a corresponding PNG file taken from the current map view.
-version:1.0
+name=HTML Image Map Creator
+author=Emil Sivro, Richard Duivenvoorde
+email=geometalab@ost.ch
+qgisMinimumVersion=2.14.16
+description=This plugin creates a static image map (HTML5/CSS/JavaScript) with interactive features
+about=The input is an active point or polygon layer and a current map view in QGIS. The output will be an HTML file along with a corresponding PNG file taken from the current map view.
+version=1.0.1
+
+repository=https://github.com/geometalab/HTML-Image-Map-Creator-QGIS-Plugin
+
+# Optional items:
+
+homepage=https://giswiki.hsr.ch/HTML_Image_Map_Creator_QGIS_Plugin
+tracker=https://github.com/geometalab/HTML-Image-Map-Creator-QGIS-Plugin/issues
+
+tags=html, web, map
+category=web
 experimental=False
+deprecated=True
 
-; end of mandatory metadata
-
-
-; start of optional metadata
-
-changelog:
-    1.0   (07-2017) Published build
-    0.5   (07-2017) Tested release build
-    0.4   (07-2017) Ok button states, fixed errors, refactoring, improved templates
-    0.3   (07-2017) Error handling, added multi-point compatibility, overall improvements
-    0.2   (07-2017) Removed marker symbols, refactored code & templates
-    0.1   (06-2017) Initial build
-
-homepage:https://giswiki.hsr.ch/HTML_Image_Map_Creator_QGIS_Plugin
-repository:https://github.com/geometalab/HTML-Image-Map-Creator-QGIS-Plugin
-tracker:https://github.com/geometalab/HTML-Image-Map-Creator-QGIS-Plugin/issues
+changelog=
+    1.0.1 2024-06-20: Update metadata
+    1.0 2017-07: Published build
+    0.5 2017-07: Tested release build
+    0.4 2017-07: Ok button states, fixed errors, refactoring, improved templates
+    0.3 2017-07: Error handling, added multi-point compatibility, overall improvements
+    0.2 2017-07: Removed marker symbols, refactored code & templates
+    0.1 2017-06: Initial build
