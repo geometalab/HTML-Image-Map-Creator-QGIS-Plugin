@@ -9,11 +9,12 @@ description=This plugin creates a static image map (HTML5/CSS/JavaScript) with i
 about=The input is an active point or polygon layer and a current map view in QGIS. The output will be an HTML file along with a corresponding PNG file taken from the current map view.
 version=1.0.1
 
-homepage=https://giswiki.hsr.ch/HTML_Image_Map_Creator_QGIS_Plugin
 repository=https://github.com/geometalab/HTML-Image-Map-Creator-QGIS-Plugin
-tracker=https://github.com/geometalab/HTML-Image-Map-Creator-QGIS-Plugin/issues
 
 # Optional items:
+
+homepage=https://giswiki.hsr.ch/HTML_Image_Map_Creator_QGIS_Plugin
+tracker=https://github.com/geometalab/HTML-Image-Map-Creator-QGIS-Plugin/issues
 
 tags=html, web, map
 category=web
@@ -22,9 +23,9 @@ deprecated=True
 
 changelog=
     1.0.1 2024-06-20: Update metadata
-    1.0.0 2017-07: Published build
-    0.5.0 2017-07: Tested release build
-    0.4.0 2017-07: Ok button states, fixed errors, refactoring, improved templates
-    0.3.0 2017-07: Error handling, added multi-point compatibility, overall improvements
-    0.2.0 2017-07: Removed marker symbols, refactored code & templates
-    0.1.0 2017-06: Initial build
+    1.0 2017-07: Published build
+    0.5 2017-07: Tested release build
+    0.4 2017-07: Ok button states, fixed errors, refactoring, improved templates
+    0.3 2017-07: Error handling, added multi-point compatibility, overall improvements
+    0.2 2017-07: Removed marker symbols, refactored code & templates
+    0.1 2017-06: Initial build
